@@ -1,0 +1,62 @@
+/* Street Code mobile app: composition only. Components live in the design system. */
+body { padding-top: var(--safe-t); overscroll-behavior-y: none; }
+.boot { min-height: 100dvh; display: grid; place-items: center; background: var(--graphite); } .boot img { border-radius: 18px; animation: pop .6s var(--ease) both; }
+#view { max-width: 640px; margin: 0 auto; padding: 8px 16px calc(110px + var(--safe-b)); }
+.topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 2px 10px; }
+.topbar h1 { font-size: 30px; }
+.hello { font-size: 14px; color: var(--muted); }
+.stat-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 6px 0 18px; }
+.stat { padding: 12px 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; }
+.stat b { display: block; font: 700 30px/1 var(--font-display); } .stat span { font-size: 12.5px; color: var(--muted); }
+.stat.hot b { color: var(--rust); } .stat.warn b { color: color-mix(in srgb, var(--amber) 80%, var(--fg)); }
+.veh-list { display: flex; flex-direction: column; gap: 16px; }
+.next { margin-top: 26px; }
+.next .lbl { display: flex; justify-content: space-between; align-items: center; margin-bottom: 26px; font-weight: 600; }
+.next .lbl span { display: inline-flex; gap: 8px; align-items: center; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+.mini { display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px 0 8px; border-radius: 999px; background: var(--surface-2); font-size: 12.5px; font-weight: 500; }
+.mini i { width: 8px; height: 8px; border-radius: 50%; background: var(--c); }
+.fab { position: fixed; z-index: 45; right: max(16px, calc(50% - 304px)); bottom: calc(84px + var(--safe-b)); box-shadow: 0 12px 30px -8px rgba(200,80,26,.6); border-radius: 999px; min-height: 54px; padding: 0 22px; }
+
+.vhero { padding: 20px; background: var(--graphite); color: var(--paper); border-radius: 20px; position: relative; overflow: hidden; margin-top: 4px; }
+.vhero::after { content: ''; position: absolute; right: -40px; top: -40px; width: 200px; height: 200px; background: url('/design/brand/command-mark-glyph.svg') center/contain no-repeat; opacity: .07; }
+.vhero h1 { font-size: 30px; margin: 12px 0 2px; } .vhero .sub { color: #9aa7a9; font-size: 14px; }
+.vhero .odo-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; margin-top: 20px; }
+.vhero .odo i { background: #000; border: 1px solid #2b3032; }
+.svc { padding: 18px 16px 16px; }
+.svc-head { display: flex; align-items: center; gap: 10px; margin-bottom: 30px; }
+.svc-head .ic { width: 22px; height: 22px; color: var(--muted); } .svc-head b { flex: 1; }
+.svc-foot { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-top: 12px; font-size: 12.5px; color: var(--muted); }
+.svc.unknown .fl { opacity: .55; }
+.quick { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.quick button { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 14px 6px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; font-weight: 600; font-size: 13.5px; }
+.quick .ic { width: 26px; height: 26px; color: var(--rust); }
+.docrow { display: grid; gap: 8px; padding: 14px 0; border-top: 1px solid var(--line); } .docrow:first-child { border-top: 0; }
+
+.licence { position: relative; padding: 18px 18px 16px; border-radius: 18px; color: var(--graphite); background: linear-gradient(135deg, #f7f5ef 0%, #ebe8dd 60%, #e2dfd2 100%); border: 1px solid #cfcabb; box-shadow: var(--shadow); overflow: hidden; }
+.licence::before { content: ''; position: absolute; inset: 0 0 auto 0; height: 8px; background: repeating-linear-gradient(90deg, var(--amber) 0 18px, var(--graphite) 18px 36px); }
+.licence h3 { margin-top: 10px; font-size: 24px; } .licence .no { font: 600 15px var(--font-mono); letter-spacing: .06em; margin-top: 2px; }
+.groups { display: flex; gap: 6px; margin: 14px 0; }
+.grp { display: grid; place-items: center; width: 34px; height: 34px; background: var(--graphite); color: var(--amber); border-radius: 6px; font: 600 18px var(--font-display); } .grp.off { background: transparent; color: #9a9686; border: 1.5px dashed #b9b4a3; }
+.livecode { margin-top: 12px; padding: 14px; background: var(--graphite); color: var(--paper); border-radius: 12px; text-align: center; }
+.livecode .code { font: 700 26px/1.1 var(--font-mono); letter-spacing: .08em; color: var(--amber); word-break: break-all; }
+.livecode .ttl { height: 3px; margin-top: 10px; background: #2c3234; border-radius: 3px; overflow: hidden; } .livecode .ttl i { display: block; height: 100%; background: var(--amber); transition: width 1s linear; }
+
+.notif { display: grid; grid-template-columns: 34px 1fr; gap: 12px; padding: 14px 4px; border-top: 1px solid var(--line); }
+.notif:first-child { border-top: 0; } .notif.unread .t { font-weight: 700; }
+.notif .dot { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 10px; background: var(--surface-2); }
+.notif.urgent .dot { background: color-mix(in srgb, var(--bad) 16%, transparent); color: var(--bad); } .notif.warn .dot { background: color-mix(in srgb, var(--amber) 24%, transparent); }
+.session { padding: 22px; text-align: center; background: var(--graphite); color: var(--paper); border-radius: 22px; }
+.session .timer { font: 700 52px/1 var(--font-mono); margin: 14px 0; color: var(--amber); }
+.session .live { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; } .session .live::before { content: ''; width: 10px; height: 10px; border-radius: 50%; background: var(--good); box-shadow: 0 0 0 0 rgba(46,158,79,.7); animation: ping 1.6s infinite; }
+@keyframes ping { 70% { box-shadow: 0 0 0 12px rgba(46,158,79,0); } 100% { box-shadow: 0 0 0 0 rgba(46,158,79,0); } }
+.welcome { min-height: 100dvh; display: flex; flex-direction: column; justify-content: flex-end; background: var(--graphite); color: var(--paper); margin: 0 -16px; padding: 0 22px calc(28px + var(--safe-b)); position: relative; overflow: hidden; }
+.welcome::before { content: ''; position: absolute; right: -25%; top: 4%; width: 110%; aspect-ratio: 1; background: url('/design/brand/command-mark-glyph.svg') center/contain no-repeat; opacity: .07; }
+.welcome > * { position: relative; } .welcome h1 { font-size: 54px; line-height: .95; text-transform: uppercase; margin: 18px 0 12px; } .welcome h1 em { font-style: normal; color: var(--amber); }
+.welcome .input { background: #1b1e1f; border-color: #2e3436; color: var(--paper); } .welcome .field > label { color: #93a0a2; }
+.devs { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; } .devs button { border: 1px dashed #4a5456; background: none; color: #c3cccd; padding: 3px 10px; border-radius: 999px; font-size: 12.5px; }
+.tl2 { list-style: none; margin: 0; padding: 0 0 0 20px; position: relative; } .tl2::before { content: ''; position: absolute; left: 5px; top: 6px; bottom: 6px; width: 2px; background: var(--line); }
+.tl2 li { position: relative; padding: 0 0 16px 14px; } .tl2 li::before { content: ''; position: absolute; left: -19px; top: 5px; width: 12px; height: 12px; border-radius: 50%; border: 3px solid var(--steel-lt); background: var(--bg); } .tl2 li.v::before { background: var(--good); border-color: var(--good); }
+.role-chip { text-transform: capitalize; }
+.check-list label { display: flex; gap: 10px; align-items: center; padding: 8px 0; }
+.check-list input { width: 20px; height: 20px; accent-color: var(--rust); }

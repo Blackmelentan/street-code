@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Street Code: the whole life of a vehicle, provably true</title>
+<meta name="description" content="Service reminders that count down to the finish line, garage-verified vehicle history, safe car lending, and roadside checks for the police. Built for the Gambia.">
+<meta name="theme-color" content="#121415">
+<meta name="application-name" content="Street Code">
+<meta property="og:title" content="Street Code: the whole life of a vehicle, provably true">
+<meta property="og:description" content="Know when your oil is due, prove a car's history, lend it safely, and let the police check it without stopping you.">
+<meta property="og:type" content="website">
+
+<link rel="icon" href="/design/brand/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/design/brand/favicon.ico" sizes="48x48">
+<link rel="icon" href="/design/brand/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="icon" href="/design/brand/favicon-16.png" sizes="16x16" type="image/png">
+<link rel="apple-touch-icon" href="/design/brand/apple-touch-icon.png">
+<link rel="mask-icon" href="/design/brand/safari-pinned-tab.svg" color="#e3a008">
+<link rel="manifest" href="/app/manifest.webmanifest">
+<meta name="msapplication-config" content="/design/brand/browserconfig.xml">
+<meta name="msapplication-TileColor" content="#121415">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=Oswald:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="/design/design.css">
+<link rel="stylesheet" href="/web.css">
+</head>
+<body>
+<a class="sr" href="#main">Skip to content</a>
+
+<header class="top on-dark">
+  <div class="wrap top-in">
+    <a class="brand" href="/" aria-label="Street Code home"><img src="/design/brand/mark.svg" alt="" width="36" height="36"><span>Street Code</span></a>
+    <nav class="nav" aria-label="Main">
+      <a href="#finish-line">Service</a>
+      <a href="#lend">Lending</a>
+      <a href="#garages">Garages</a>
+      <a href="#police">Police</a>
+    </nav>
+    <div class="cluster">
+      <a class="btn amber sm" href="#check">Check a car</a>
+      <a class="btn sm hide-sm" href="/app/">Open the app</a>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+<!-- ============================ HERO ============================ -->
+<section class="hero on-dark">
+  <div class="wrap hero-in">
+    <div class="hero-copy">
+      <p class="kicker">Built for the Gambia</p>
+      <h1>Know your vehicle.<br><em>Prove</em> its history.</h1>
+      <p class="lede">Service reminders that count down to a finish line. A vehicle passport that garages seal and nobody can quietly rewrite. Lend your car without lending your risk.</p>
+
+      <form id="checkForm" class="checkbox" role="search" aria-label="Check a vehicle" novalidate>
+        <label class="sr" for="q">Plate number or VIN</label>
+        <input id="q" class="input" name="q" placeholder="Plate or VIN, e.g. BJL-4821-B" autocomplete="off" autocapitalize="characters" spellcheck="false">
+        <button class="btn amber" type="submit">Check history</button>
+      </form>
+      <p class="hint">Buying a car? Check it first. No sign-in, and no personal details are ever shown.
+        <span class="try">Try <button type="button" data-try="BJL-4821-B">BJL-4821-B</button> <button type="button" data-try="KM-7732-A">KM-7732-A</button></span></p>
+    </div>
+
+    <!-- The finish line, running the real service engine -->
+    <aside class="demo ticket-lite" aria-label="Interactive oil life demo">
+      <div class="demo-head">
+        <span class="demo-title"><svg class="ic"><use href="/design/icons.svg#i-oil"/></svg> Engine oil</span>
+        <span class="tag" id="demoTag">On track</span>
+      </div>
+      <div id="demoBar" class="fl-slot"></div>
+      <div class="demo-line"><b id="demoLeft">4,500 km to go</b><span id="demoRight">at 67,500 km</span></div>
+      <div class="sep"></div>
+      <div class="field">
+        <label for="oilType">Oil you used</label>
+        <div class="seg-pick" id="oilPick">
+          <label><input type="radio" name="oil" value="mineral"><span>Mineral</span></label>
+          <label><input type="radio" name="oil" value="semi_synthetic" checked><span>Semi-synthetic</span></label>
+          <label><input type="radio" name="oil" value="full_synthetic"><span>Full synthetic</span></label>
+        </div>
+      </div>
+      <div class="field">
+        <label for="used">Driven since the oil change: <b class="num" id="usedOut">3,000 km</b></label>
+        <input id="used" type="range" min="0" max="12000" step="100" value="3000">
+      </div>
+      <p class="tiny muted">Cars typically run 35 km a day; the app learns yours. Intervals are defaults: your manual and mechanic come first.</p>
+    </aside>
+  </div>
+  <div class="roadline" aria-hidden="true"></div>
+</section>
+
+<section id="check" class="result-wrap hide" aria-live="polite"><div class="wrap" id="result"></div></section>
+
+<!-- ============================ STATS ============================ -->
+<section class="band" aria-label="Street Code in numbers">
+  <div class="wrap band-in">
+    <div><b class="num" data-stat="vehicles">-</b><span>vehicles registered</span></div>
+    <div><b class="num" data-stat="sealed_records">-</b><span>records sealed in passports</span></div>
+    <div><b class="num" data-stat="garages">-</b><span>verified garages</span></div>
+    <div><b class="num" data-stat="odometer_fraud_blocked">-</b><span>odometer rollbacks refused</span></div>
+  </div>
+</section>
+
+<!-- ============================ FINISH LINE ============================ -->
+<section id="finish-line" class="sec">
+  <div class="wrap two">
+    <div>
+      <p class="kicker dark">The finish line</p>
+      <h2 class="big">Every service has a finish line. You can see it coming.</h2>
+      <p class="lede2">Tell Street Code what oil went in and the odometer at the time. It works out when that oil runs out, by distance or by date, whichever comes first, and learns how far you really drive to predict the day.</p>
+      <ul class="ticks">
+        <li>Green to red as the miles build up, with alerts at 80%, 95% and when it is overdue.</li>
+        <li>Different oils, different limits: mineral, semi-synthetic, full synthetic.</li>
+        <li>Cars, motorbikes, taxis, trucks and tractors. Tractors count engine hours, not kilometres.</li>
+        <li>Car wash reminders, insurance, road tax and roadworthiness dates in the same place.</li>
+      </ul>
+    </div>
+    <div class="card oil-compare">
+      <h3>Same 6,000 km. Three different oils.</h3>
+      <div id="oilCompare" class="stack" style="--gap:20px"></div>
+      <p class="tiny muted">Car defaults. Taxis and minibuses run in severe conditions, so their intervals are cut by a quarter automatically.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ LENDING ============================ -->
+<section id="lend" class="sec alt">
+  <div class="wrap">
+    <p class="kicker dark">Lending and driving</p>
+    <h2 class="big narrow">Your friend drives your car. The police know it is allowed.</h2>
+    <div class="steps">
+      <article class="step"><span class="n">1</span><svg class="ic xl"><use href="/design/icons.svg#i-key"/></svg><h3>You lend it</h3><p>Give a phone number, a time window and a reason: family, friend, rental or employee. Take it back with one tap, even mid-journey.</p></article>
+      <article class="step"><span class="n">2</span><svg class="ic xl"><use href="/design/icons.svg#i-wheel"/></svg><h3>They start driving</h3><p>The driver taps Start. Street Code checks their licence covers the vehicle: a car licence cannot start a motorbike.</p></article>
+      <article class="step"><span class="n">3</span><svg class="ic xl"><use href="/design/icons.svg#i-shield"/></svg><h3>A check just works</h3><p>An officer scans the plate and sees who is driving and on whose authority. No one has to be pulled over to find out.</p></article>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ GARAGES ============================ -->
+<section id="garages" class="sec">
+  <div class="wrap two flip">
+    <div>
+      <p class="kicker dark">Garages and mechanics</p>
+      <h2 class="big">One mechanic. One account. As many garages as they work for.</h2>
+      <p class="lede2">A mechanic can be an employee at one garage and the owner of another. The boss manages the team: invite by phone number, set roles, suspend or remove someone, all from the app. Nobody can appoint someone above their own rank.</p>
+      <ul class="ticks">
+        <li>Open a job card, quote it, and let the owner approve before anything touches their records.</li>
+        <li>Finish the job and the work is sealed into the vehicle passport under your garage's name.</li>
+        <li>Verified garages appear in the directory. Customers can trust the stamp.</li>
+      </ul>
+    </div>
+    <div>
+      <div class="dir-head"><h3>Verified garages</h3><span class="tag good dot">Verified</span></div>
+      <div id="garageList" class="dir"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ TRUST ============================ -->
+<section class="sec alt">
+  <div class="wrap two">
+    <div class="card trust">
+      <h3>How a passport stays honest</h3>
+      <ol class="proof">
+        <li><b>Written by the right person.</b> Only the garage that did the work can seal a service. Not the owner, not us.</li>
+        <li><b>Hashed and chained.</b> Each record contains the fingerprint of the one before. Change a word anywhere and the chain breaks.</li>
+        <li><b>Signed.</b> Every record carries an Ed25519 signature. Anyone can check it with our <a href="/api/public/keys">public key</a>, without trusting our server.</li>
+        <li><b>Odometers only go up.</b> A lower reading is refused, recorded and reported to the owner.</li>
+      </ol>
+    </div>
+    <div>
+      <p class="kicker dark">Trust</p>
+      <h2 class="big">Odometer fraud and fake histories stop being a matter of opinion.</h2>
+      <p class="lede2">A buyer can check any plate for free. They see the sealed history and whether the police have flagged the vehicle. They never see who owns it.</p>
+      <a class="btn" href="#check" data-scroll-check>Check a car now</a>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ POLICE ============================ -->
+<section id="police" class="sec on-dark police">
+  <div class="wrap two">
+    <div>
+      <p class="kicker">For the police</p>
+      <h2 class="big">Check a plate. Know the rest.</h2>
+      <p class="lede2">One lookup shows registration, insurance, road tax, roadworthiness, open citations, who is declared as driving and on whose authority, and whether their licence covers the vehicle. Red alerts and persons of interest appear with their instruction.</p>
+      <a class="btn amber" href="/command/">Open Police Command</a>
+      <p class="tiny muted" style="margin-top:12px">Officers are added by an administrator. There is no self-service sign-up.</p>
+    </div>
+    <div class="safeguards">
+      <h3>Power with a paper trail</h3>
+      <ul>
+        <li><svg class="ic"><use href="/design/icons.svg#i-eye"/></svg><span><b>Every lookup is recorded</b> by the server with the reason and the place. It cannot be skipped or edited.</span></li>
+        <li><svg class="ic"><use href="/design/icons.svg#i-users"/></svg><span><b>Two people for a person flag.</b> The creator can never approve their own.</span></li>
+        <li><svg class="ic"><use href="/design/icons.svg#i-clock"/></svg><span><b>Persons of interest expire</b> after at most 90 days unless renewed.</span></li>
+        <li><svg class="ic"><use href="/design/icons.svg#i-lock"/></svg><span><b>Restricted detail stays restricted.</b> Officers see the summary and instruction; supervisors see the rest.</span></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ CTA ============================ -->
+<section class="sec cta">
+  <div class="wrap cta-in">
+    <img src="/design/brand/mark.svg" alt="" width="84" height="84">
+    <div>
+      <h2 class="big">Put your vehicles in your pocket.</h2>
+      <p class="lede2">Free to start. Works offline once installed. Open it in your phone's browser and choose “Add to Home screen”.</p>
+    </div>
+    <a class="btn" href="/app/">Open the app <svg class="ic"><use href="/design/icons.svg#i-arrow-right"/></svg></a>
+  </div>
+</section>
+</main>
+
+<footer class="foot on-dark">
+  <div class="wrap foot-in">
+    <a class="brand" href="/"><img src="/design/brand/mark.svg" alt="" width="32" height="32"><span>Street Code</span></a>
+    <p class="small muted">What runs the city, built like the street runs it.</p>
+    <nav class="foot-nav" aria-label="Footer"><a href="/app/">Mobile app</a><a href="/command/">Police Command</a><a href="/api/public/keys">Verification key</a><a href="#garages">Garages</a></nav>
+  </div>
+</footer>
+<script type="module" src="/web.js"></script>
+</body>
+</html>
