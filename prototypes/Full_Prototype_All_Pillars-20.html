@@ -1,0 +1,1932 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Street Code — Full Prototype</title>
+<style>
+  :root{
+    --graphite:#1B1E1F;
+    --graphite-2:#242829;
+    --steel:#3C4547;
+    --steel-lt:#7C8A8C;
+    --paper:#ECEAE4;
+    --paper-dim:#C9C6BC;
+    --amber:#E3A008;
+    --amber-dim:#8A6207;
+    --rust:#C8501A;
+    --line:#3A4041;
+    --good:#4F8F5B;
+    --good-bg:#DCEBDD;
+    --warn-bg:#FBE3C6;
+    --warn-fg:#8A4B0C;
+    --bad-bg:#F3D6D2;
+    --bad-fg:#95321F;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--graphite); font-family:'Helvetica Neue',Arial,sans-serif;
+    color:var(--paper); min-height:100vh; overflow-x:hidden;
+  }
+  .mono{font-family:'Courier New',monospace;}
+
+  .app{display:flex; min-height:100vh;}
+
+  /* ---- SIDEBAR ---- */
+  .sidebar{
+    width:230px; flex-shrink:0; border-right:1px solid var(--line);
+    padding:22px 14px; display:flex; flex-direction:column; gap:2px;
+  }
+  .brandmark{display:flex; align-items:center; gap:8px; padding:0 8px 20px;}
+  .brandmark .plate{background:var(--amber); color:var(--graphite); font-weight:800; padding:3px 7px; font-size:11px; letter-spacing:0.1em; border-radius:2px;}
+  .brandmark .name{font-size:11px; letter-spacing:0.12em; color:var(--steel-lt); text-transform:uppercase;}
+
+  .pillar-group{margin-bottom:14px;}
+  .pillar-title{font-size:9px; letter-spacing:0.12em; text-transform:uppercase; color:var(--steel-lt); padding:6px 10px 4px; font-weight:700;}
+  .nav-item{
+    padding:9px 10px; font-size:13px; border-radius:6px; cursor:pointer; color:var(--paper-dim);
+    display:flex; align-items:center; gap:8px;
+  }
+  .nav-item .dot{width:5px; height:5px; border-radius:50%; background:var(--steel-lt); flex-shrink:0;}
+  .nav-item:hover{background:var(--graphite-2);}
+  .nav-item.active{background:var(--graphite-2); color:var(--amber); font-weight:700;}
+  .nav-item.active .dot{background:var(--amber);}
+  .nav-item.nav-secondary{display:none;}
+
+  .app-switch{display:flex; gap:3px; background:var(--graphite-2); padding:3px; border-radius:8px; margin-bottom:16px;}
+  .app-switch-btn{flex:1; text-align:center; font-size:11px; font-weight:700; padding:8px 4px; border-radius:6px; cursor:pointer; color:var(--steel-lt);}
+  .app-switch-btn.active{background:var(--amber); color:var(--graphite);}
+  .sidebar[data-mode="civic"] .pillar-group[data-app="consumer"]{display:none;}
+  .sidebar[data-mode="consumer"] .pillar-group[data-app="civic"]{display:none;}
+
+  /* ---- STAGE ---- */
+  .stage{flex:1; display:flex; flex-direction:column; align-items:center; padding:32px 20px 80px; overflow-y:auto; overflow-x:hidden;}
+  .stage-row{display:flex; justify-content:center; align-items:flex-start; gap:56px; width:100%; max-width:900px;}
+
+  .sibling-nav{display:flex; flex-wrap:wrap; gap:6px; max-width:900px; width:100%; margin-bottom:20px;}
+  .sib-pill{
+    font-size:11px; font-weight:700; padding:7px 13px; border-radius:20px; cursor:pointer;
+    background:var(--graphite-2); color:var(--paper-dim); border:1px solid var(--line); white-space:nowrap;
+  }
+  .sib-pill.current{background:var(--amber); color:var(--graphite); border-color:var(--amber);}
+  .sib-pill:hover:not(.current){color:var(--paper);}
+
+  .vplate-thumb{aspect-ratio:16/9; border-radius:6px; margin-bottom:10px;}
+  .vplate-thumb .micon{width:26px; height:26px; font-size:13px;}
+  .vplate-thumb .mlabel{font-size:11px; padding:20px 10px 8px;}
+
+  .hamburger{
+    display:none; position:fixed; top:16px; left:16px; z-index:50; width:38px; height:38px;
+    background:var(--graphite-2); border:1px solid var(--line); border-radius:8px; cursor:pointer;
+    align-items:center; justify-content:center; flex-direction:column; gap:4px;
+  }
+  .hamburger span{display:block; width:16px; height:2px; background:var(--paper);}
+  .sidebar-backdrop{display:none;}
+
+  @media (max-width: 900px){
+    .hamburger{display:flex;}
+    .app{position:relative;}
+    .sidebar{
+      position:fixed; top:0; left:0; height:100vh; z-index:40; width:260px;
+      transform:translateX(-100%); transition:transform 0.2s ease; box-shadow:0 0 40px rgba(0,0,0,0.5);
+      overflow-y:auto;
+    }
+    .sidebar.open{transform:translateX(0);}
+    .sidebar-backdrop.open{
+      display:block; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:35;
+    }
+    .stage{padding:70px 14px 60px;}
+    .stage-row{flex-direction:column; align-items:center; gap:22px;}
+    .phone{width:min(400px, 94vw);}
+    .deck-panel{width:min(420px, 94vw); padding-top:0;}
+    .deck-title{font-size:24px;}
+    .sibling-nav{max-width:min(420px, 94vw); justify-content:center;}
+  }
+  .phone{
+    width:400px; background:var(--paper); color:var(--graphite);
+    border-radius:34px; border:6px solid #0F1111; overflow:hidden;
+    box-shadow:0 30px 60px rgba(0,0,0,0.5); min-height:820px; position:relative; height:fit-content;
+  }
+  .notch{position:absolute; top:0; left:50%; transform:translateX(-50%); width:120px; height:22px; background:#0F1111; border-radius:0 0 14px 14px; z-index:5;}
+  .screen{display:none; padding:38px 18px 26px;}
+  .screen.active{display:block;}
+
+  .app-header{display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:16px;}
+  .app-header .eyebrow{font-size:10px; letter-spacing:0.14em; color:var(--rust); text-transform:uppercase; font-weight:700;}
+  .app-header h1{margin:2px 0 0; font-size:21px; font-family:'Arial Narrow',Arial,sans-serif; font-weight:800;}
+  .avatar{width:30px; height:30px; border-radius:50%; background:var(--steel); flex-shrink:0;}
+  .role-toggle{display:flex; gap:4px; background:#DAD6C9; padding:3px; border-radius:8px; margin-bottom:14px;}
+  .role-toggle .opt{flex:1; text-align:center; font-size:11px; font-weight:700; padding:7px 4px; border-radius:6px; cursor:pointer; color:var(--steel);}
+  .role-toggle .opt.on{background:#fff; color:var(--graphite);}
+
+  /* VIN plate */
+  .vin-plate{
+    background:linear-gradient(155deg,#F4F2EC,#DAD6C9); border:1px solid #B9B4A4; border-radius:8px;
+    padding:16px 16px 14px; position:relative; box-shadow:inset 0 1px 0 rgba(255,255,255,0.6), 0 3px 8px rgba(0,0,0,0.15); margin-bottom:12px;
+  }
+  .vin-plate::before, .vin-plate::after{content:''; position:absolute; top:8px; width:6px; height:6px; border-radius:50%; background:#9C9788; box-shadow:inset 0 1px 1px rgba(0,0,0,0.4);}
+  .vin-plate::before{left:8px;} .vin-plate::after{right:8px;}
+  .vin-plate .make-model{font-size:15px; font-weight:800; margin-bottom:2px;}
+  .vin-plate .vin-row{font-family:'Courier New',monospace; font-size:10px; letter-spacing:0.07em; color:var(--steel); margin-top:8px; display:flex; justify-content:space-between; border-top:1px dashed #B9B4A4; padding-top:7px;}
+  .vin-plate .meta-row{display:flex; gap:14px; margin-top:7px; font-size:11px; color:var(--steel);}
+  .vin-plate .meta-row b{color:var(--graphite); display:block; font-size:13px;}
+  .status-chip{position:absolute; top:14px; right:14px; font-size:9px; letter-spacing:0.06em; text-transform:uppercase; font-weight:700; padding:3px 7px; border-radius:20px;}
+  .status-chip.due{background:var(--warn-bg); color:var(--warn-fg);}
+  .status-chip.ok{background:var(--good-bg); color:#2E5F38;}
+  .status-chip.bad{background:var(--bad-bg); color:var(--bad-fg);}
+
+  .section-label{font-size:10px; letter-spacing:0.12em; text-transform:uppercase; color:var(--steel-lt); font-weight:700; margin:18px 0 9px;}
+  .action-row{display:flex; gap:8px; margin-top:12px;}
+  .btn{flex:1; text-align:center; padding:11px 10px; border-radius:7px; font-size:12px; font-weight:700; cursor:pointer; border:1px solid var(--line);}
+  .btn.primary{background:var(--rust); color:#fff; border:none;}
+  .btn.ghost{background:transparent; color:var(--graphite); border:1px solid #B9B4A4;}
+  .btn.small{padding:7px 8px; font-size:11px;}
+
+  .stat-strip{display:flex; gap:8px; margin-top:12px;}
+  .stat{flex:1; background:#F4F2EC; border:1px solid #DAD6C9; border-radius:7px; padding:9px 10px;}
+  .stat .num{font-size:17px; font-weight:800;}
+  .stat .lbl{font-size:9px; color:var(--steel); text-transform:uppercase; letter-spacing:0.05em;}
+
+  .timeline-item{display:flex; gap:10px; padding:10px 0; border-bottom:1px solid #DAD6C9;}
+  .timeline-item .dot2{width:8px; height:8px; border-radius:50%; background:var(--rust); margin-top:5px; flex-shrink:0;}
+  .timeline-item .body{flex:1;}
+  .timeline-item .title{font-size:13px; font-weight:700;}
+  .timeline-item .sub{font-size:11px; color:var(--steel);}
+  .timeline-item .amt{font-size:12px; font-weight:700; color:var(--steel);}
+
+  .stepper{display:flex; margin:14px 0 16px;}
+  .step{flex:1; text-align:center; position:relative;}
+  .step .bar{height:4px; background:#DAD6C9; margin-bottom:7px;}
+  .step.done .bar{background:var(--good);}
+  .step.current .bar{background:var(--amber);}
+  .step .lbl{font-size:9px; text-transform:uppercase; color:var(--steel); font-weight:700;}
+  .step.current .lbl{color:var(--graphite);}
+
+  .card{background:#F4F2EC; border:1px solid #DAD6C9; border-radius:10px; padding:13px; margin-bottom:10px;}
+  .card .row{display:flex; justify-content:space-between; font-size:12px; padding:5px 0; border-bottom:1px dotted #C9C6BC;}
+  .card .row:last-child{border-bottom:none;}
+  .card .row .k{color:var(--steel);} .card .row .v{font-weight:700;}
+
+  .photo-strip{display:flex; gap:6px; margin-top:8px;}
+  .photo-strip .ph{flex:1; aspect-ratio:1; background:linear-gradient(135deg,#D7D3C6,#BEB9A9); border-radius:6px;}
+
+  .price-line{display:flex; justify-content:space-between; font-size:13px; padding:5px 0;}
+  .price-line.total{font-weight:800; border-top:1px solid #DAD6C9; margin-top:5px; padding-top:9px; font-size:15px;}
+
+  .calendar{display:grid; grid-template-columns:repeat(7,1fr); gap:4px; margin:10px 0;}
+  .cal-day{aspect-ratio:1; display:flex; align-items:center; justify-content:center; font-size:11px; border-radius:6px; background:#F4F2EC; color:var(--steel);}
+  .cal-day.avail{background:var(--good-bg); color:#2E5F38; font-weight:700;}
+  .cal-day.sel{background:var(--rust); color:#fff; font-weight:700;}
+
+  .tag{display:inline-block; font-size:9px; padding:2px 6px; border:1px solid var(--steel); border-radius:20px; color:var(--steel); letter-spacing:0.05em; text-transform:uppercase; margin-right:5px;}
+
+  /* Fleet table */
+  .flist{display:flex; flex-direction:column; gap:8px;}
+  .frow{background:#F4F2EC; border:1px solid #DAD6C9; border-radius:8px; padding:10px 12px; display:flex; justify-content:space-between; align-items:center;}
+  .frow .name{font-size:12px; font-weight:700;}
+  .frow .driver{font-size:10px; color:var(--steel);}
+  .frow .flag{font-size:9px; font-weight:700; padding:3px 7px; border-radius:20px;}
+
+  /* Marketplace quote list */
+  .quote{background:#F4F2EC; border:1px solid #DAD6C9; border-radius:9px; padding:11px; margin-bottom:8px;}
+  .quote .top{display:flex; justify-content:space-between; align-items:center;}
+  .quote .shop{font-size:13px; font-weight:800;}
+  .quote .price{font-size:15px; font-weight:800; color:var(--rust);}
+  .quote .meta{font-size:10px; color:var(--steel); margin-top:3px;}
+  .stars{color:var(--amber); font-size:11px;}
+
+  /* Parts list */
+  .part{background:#F4F2EC; border:1px solid #DAD6C9; border-radius:9px; padding:11px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;}
+  .part .pname{font-size:12px; font-weight:700;}
+  .part .psub{font-size:10px; color:var(--steel);}
+  .part .pprice{font-size:13px; font-weight:800;}
+  .fit-badge{font-size:9px; background:var(--good-bg); color:#2E5F38; padding:2px 6px; border-radius:20px; font-weight:700;}
+
+  /* Car culture feed */
+  .post{background:#F4F2EC; border:1px solid #DAD6C9; border-radius:10px; overflow:hidden; margin-bottom:12px;}
+  .post .phead{display:flex; align-items:center; gap:8px; padding:10px 12px 0;}
+  .post .pavatar{width:26px; height:26px; border-radius:50%; background:var(--steel);}
+  .post .pname{font-size:12px; font-weight:800;}
+  .post .psub{font-size:10px; color:var(--steel);}
+  .post .pimg{margin:10px 0 0; aspect-ratio:16/9; background:linear-gradient(135deg,#D7D3C6,#B9B4A4);}
+  .post .pcaption{padding:10px 12px; font-size:12px;}
+  .post .pfoot{display:flex; gap:14px; padding:0 12px 12px; font-size:11px; color:var(--steel);}
+  .event-strip{display:flex; gap:8px; overflow-x:auto; margin-bottom:14px; padding-bottom:2px;}
+  .event-card{flex-shrink:0; width:130px; background:#F4F2EC; border:1px solid #DAD6C9; border-radius:9px; padding:9px;}
+  .event-card .edate{font-size:9px; color:var(--rust); font-weight:800; text-transform:uppercase;}
+  .event-card .ename{font-size:11px; font-weight:700; margin-top:2px;}
+  .event-card .eloc{font-size:9px; color:var(--steel); margin-top:2px;}
+
+  .footer-note{color:var(--steel-lt); font-size:11px; text-align:center; padding:0 24px; max-width:400px; margin:20px auto 0;}
+
+  /* Add vehicle / form */
+  .field{margin-bottom:12px;}
+  .field label{display:block; font-size:10px; text-transform:uppercase; letter-spacing:0.06em; color:var(--steel); font-weight:700; margin-bottom:5px;}
+  .field input, .field .input-like{width:100%; padding:10px 11px; border-radius:7px; border:1px solid #C9C6BC; background:#fff; font-size:13px; color:var(--graphite);}
+  .scan-box{border:2px dashed #B9B4A4; border-radius:10px; padding:26px 14px; text-align:center; color:var(--steel); font-size:12px; margin-bottom:14px;}
+
+  /* Driver rows */
+  .driver-row{background:#F4F2EC; border:1px solid #DAD6C9; border-radius:8px; padding:10px 12px; display:flex; align-items:center; gap:10px; margin-bottom:8px;}
+  .driver-row .davatar{width:30px; height:30px; border-radius:50%; background:var(--steel); flex-shrink:0;}
+  .driver-row .dname{font-size:12px; font-weight:700;}
+  .driver-row .dsub{font-size:10px; color:var(--steel);}
+  .driver-row .dflag{margin-left:auto; font-size:9px; font-weight:700; padding:3px 7px; border-radius:20px;}
+
+  /* Chat */
+  .chat-thread{display:flex; flex-direction:column; gap:8px; margin-bottom:14px;}
+  .bubble{max-width:75%; padding:9px 12px; border-radius:12px; font-size:12px; line-height:1.4;}
+  .bubble.them{background:#F4F2EC; border:1px solid #DAD6C9; align-self:flex-start; border-bottom-left-radius:3px;}
+  .bubble.me{background:var(--rust); color:#fff; align-self:flex-end; border-bottom-right-radius:3px;}
+  .chat-time{font-size:9px; color:var(--steel-lt); text-align:center; margin:4px 0;}
+  .chat-input{display:flex; gap:8px; border:1px solid #C9C6BC; border-radius:20px; padding:8px 8px 8px 14px; align-items:center; background:#fff;}
+  .chat-input span{color:var(--steel-lt); font-size:12px; flex:1;}
+
+  /* Star rating */
+  .star-row{display:flex; gap:6px; justify-content:center; margin:16px 0; font-size:30px; color:var(--paper-dim);}
+  .star-row .on{color:var(--amber);}
+  textarea.review-box{width:100%; min-height:80px; border-radius:8px; border:1px solid #C9C6BC; padding:10px; font-size:12px; font-family:inherit; color:var(--graphite); resize:none;}
+
+  /* Notifications */
+  .notif{display:flex; gap:10px; padding:11px 0; border-bottom:1px solid #DAD6C9;}
+  .notif .nicon{width:30px; height:30px; border-radius:8px; background:var(--graphite); color:var(--amber); display:flex; align-items:center; justify-content:center; font-size:13px; flex-shrink:0;}
+  .notif .ntitle{font-size:12px; font-weight:700;}
+  .notif .nsub{font-size:10px; color:var(--steel);}
+  .notif .ntime{font-size:9px; color:var(--steel-lt); margin-left:auto; white-space:nowrap;}
+
+  /* Payments */
+  .paycard{background:linear-gradient(135deg,#2B2F30,#1B1E1F); color:#fff; border-radius:12px; padding:16px; margin-bottom:14px;}
+  .paycard .pcnum{font-family:'Courier New',monospace; font-size:14px; letter-spacing:0.1em; margin:14px 0 10px;}
+  .paycard .pcrow{display:flex; justify-content:space-between; font-size:10px; color:#B9B4A4; text-transform:uppercase;}
+  .payout-row{display:flex; justify-content:space-between; align-items:center; padding:9px 0; border-bottom:1px dotted #C9C6BC; font-size:12px;}
+  .payout-row .pos{color:#2E5F38; font-weight:700;}
+
+  /* Role picker */
+  .role-card{background:#F4F2EC; border:1.5px solid #DAD6C9; border-radius:10px; padding:13px; margin-bottom:9px; display:flex; align-items:center; gap:11px; cursor:pointer;}
+  .role-card.sel{border-color:var(--rust); background:#FBEDE6;}
+  .role-card .ricon{width:34px; height:34px; border-radius:8px; background:var(--graphite); color:var(--amber); display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0;}
+  .role-card .rname{font-size:13px; font-weight:800;}
+  .role-card .rsub{font-size:10px; color:var(--steel);}
+
+  /* Gig cards */
+  .gig{background:#F4F2EC; border:1px solid #DAD6C9; border-radius:9px; padding:11px; margin-bottom:8px;}
+  .gig .gtop{display:flex; justify-content:space-between; align-items:flex-start;}
+  .gig .gtitle{font-size:13px; font-weight:800;}
+  .gig .gpay{font-size:14px; font-weight:800; color:var(--rust);}
+  .gig .gmeta{font-size:10px; color:var(--steel); margin-top:4px;}
+  .gig .gtags{margin-top:7px;}
+
+  /* Search list */
+  .map-placeholder{aspect-ratio:16/10; background:repeating-linear-gradient(45deg,#DAD6C9,#DAD6C9 8px,#E3E0D4 8px,#E3E0D4 16px); border-radius:10px; margin-bottom:12px; position:relative;}
+  .map-pin{position:absolute; width:10px; height:10px; border-radius:50% 50% 50% 0; background:var(--rust); transform:rotate(-45deg);}
+  .search-result{background:#F4F2EC; border:1px solid #DAD6C9; border-radius:9px; padding:11px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;}
+  .search-result .sname{font-size:12px; font-weight:800;}
+  .search-result .smeta{font-size:10px; color:var(--steel); margin-top:2px;}
+  .search-result .sdist{font-size:11px; font-weight:700; color:var(--steel);}
+
+  /* Admin queue */
+  .queue-row{background:#F4F2EC; border:1px solid #DAD6C9; border-radius:9px; padding:11px; margin-bottom:8px;}
+  .queue-row .qtop{display:flex; justify-content:space-between; align-items:center;}
+  .queue-row .qname{font-size:12px; font-weight:800;}
+  .queue-row .qtype{font-size:9px; color:var(--steel-lt); text-transform:uppercase; letter-spacing:0.05em;}
+  .queue-row .qactions{display:flex; gap:6px; margin-top:9px;}
+  .queue-row .qactions .btn{padding:7px 8px; font-size:10px;}
+  .dispute-msg{background:#F4F2EC; border-left:3px solid var(--rust); border-radius:0 8px 8px 0; padding:9px 11px; margin-bottom:8px; font-size:11px;}
+
+  /* Smart media placeholders — styled like real photo thumbnails, not icon tiles */
+  .media-ph{
+    position:relative; display:block; overflow:hidden; border-radius:6px;
+    background:
+      radial-gradient(circle at 30% 20%, rgba(255,255,255,0.25), transparent 45%),
+      linear-gradient(160deg, #9C9788, #6B685D 55%, #4A4842);
+  }
+  .media-ph .micon{
+    position:absolute; top:7px; left:7px; width:22px; height:22px; border-radius:6px;
+    background:rgba(20,22,23,0.72); color:#fff; font-size:11px; line-height:1;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .media-ph .mlabel{
+    position:absolute; left:0; right:0; bottom:0; padding:14px 8px 6px;
+    background:linear-gradient(to top, rgba(10,11,12,0.78), transparent);
+    color:#fff; font-size:9px; font-weight:700; letter-spacing:0.01em; text-transform:none;
+  }
+  .media-ph.video::before{
+    content:'▶'; position:absolute; top:7px; right:7px; width:18px; height:18px; border-radius:50%;
+    background:rgba(20,22,23,0.72); color:#fff; font-size:8px; display:flex; align-items:center; justify-content:center;
+  }
+  .post .pimg.media-ph{aspect-ratio:16/9; border-radius:0;}
+  .post .pimg .micon{width:26px; height:26px; font-size:13px; top:10px; left:10px;}
+  .post .pimg .mlabel{font-size:12px; padding:22px 12px 10px;}
+  .post .pimg.video::before{width:24px; height:24px; font-size:10px; top:10px; right:10px;}
+
+  /* Garage worth */
+  .worth-bar-row{margin-bottom:10px;}
+  .worth-bar-row .wtop{display:flex; justify-content:space-between; font-size:11px; margin-bottom:4px;}
+  .worth-bar-row .wtop b{font-weight:800;}
+  .worth-track{height:8px; background:#DAD6C9; border-radius:4px; overflow:hidden;}
+  .worth-fill{height:100%; background:var(--rust); border-radius:4px;}
+
+  /* Public collection profile */
+  .cover-media{aspect-ratio:16/9; border-radius:12px; margin-bottom:0;}
+  .profile-head{display:flex; align-items:flex-end; gap:12px; margin-top:-28px; padding-left:10px; margin-bottom:10px;}
+  .profile-head .pavatar-lg{width:56px; height:56px; border-radius:12px; border:3px solid var(--paper); background:var(--graphite); color:var(--amber); display:flex; align-items:center; justify-content:center; font-size:22px;}
+  .profile-stats{display:flex; gap:18px; margin:10px 0 14px;}
+  .profile-stats .pstat{text-align:left;}
+  .profile-stats .pstat .n{font-size:15px; font-weight:800; display:block;}
+  .profile-stats .pstat .l{font-size:9px; color:var(--steel); text-transform:uppercase;}
+  .media-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:4px;}
+  .media-grid .media-ph{aspect-ratio:1; border-radius:4px;}
+  .media-grid .media-ph .micon{font-size:18px;}
+  .media-grid .media-ph .mlabel{display:none;}
+
+  /* Live tracking */
+  .track-map{aspect-ratio:16/11; border-radius:12px; position:relative; margin-bottom:12px;
+    background:repeating-linear-gradient(0deg,#DAD6C9,#DAD6C9 1px,#EDEAE0 1px,#EDEAE0 26px),
+               repeating-linear-gradient(90deg,#DAD6C9,#DAD6C9 1px,#EDEAE0 1px,#EDEAE0 26px);}
+  .track-route{position:absolute; border-top:3px dashed var(--rust); width:60%; top:55%; left:18%; transform:rotate(-18deg);}
+  .track-dot{position:absolute; width:14px; height:14px; border-radius:50%; background:var(--rust); border:3px solid #fff; box-shadow:0 2px 6px rgba(0,0,0,0.3);}
+  .speedo{display:flex; gap:8px; margin-bottom:12px;}
+  .speedo .sbox{flex:1; background:var(--graphite); color:#fff; border-radius:9px; padding:12px; text-align:center;}
+  .speedo .sbox .snum{font-size:20px; font-weight:800; color:var(--amber);}
+  .speedo .sbox .slbl{font-size:8px; text-transform:uppercase; color:var(--steel-lt); letter-spacing:0.06em;}
+
+  /* Payment method badges */
+  .paymethod{display:flex; align-items:center; gap:11px; background:#F4F2EC; border:1.5px solid #DAD6C9; border-radius:9px; padding:12px; margin-bottom:8px;}
+  .paymethod.sel{border-color:var(--rust); background:#FBEDE6;}
+  .paymethod .micon2{width:34px; height:34px; border-radius:8px; background:var(--graphite); display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0;}
+  .paymethod .mname{font-size:12px; font-weight:800;}
+  .paymethod .msub{font-size:10px; color:var(--steel);}
+  .momo-tag{font-size:8px; font-weight:800; background:var(--good-bg); color:#2E5F38; padding:2px 6px; border-radius:20px; margin-left:auto; text-transform:uppercase;}
+
+  /* Driver ride request */
+  .ride-alert{background:var(--graphite); color:#fff; border-radius:12px; padding:18px; text-align:center; margin-bottom:14px;}
+  .ride-alert .rfare{font-size:26px; font-weight:800; color:var(--amber);}
+  .ride-alert .rmeta{font-size:11px; color:var(--paper-dim); margin-top:4px;}
+  .countdown-ring{width:46px; height:46px; border-radius:50%; border:4px solid var(--amber); margin:10px auto 0; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:800; color:#fff;}
+  .trip-progress{display:flex; align-items:center; margin:14px 0;}
+  .trip-progress .tp-dot{width:10px; height:10px; border-radius:50%; background:var(--rust); flex-shrink:0;}
+  .trip-progress .tp-line{flex:1; height:3px; background:var(--rust);}
+  .trip-progress .tp-dot.end{background:#DAD6C9;}
+  .earnings-hero{text-align:center; padding:22px 0 8px;}
+  .earnings-hero .enum{font-size:34px; font-weight:800; color:var(--good);}
+  .earnings-hero .elbl{font-size:10px; text-transform:uppercase; color:var(--steel); letter-spacing:0.06em;}
+
+  .filter-chip-row{display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px;}
+  .filter-chip{font-size:10px; font-weight:700; padding:6px 11px; border-radius:20px; border:1px solid #C9C6BC; color:var(--steel);}
+  .filter-chip.on{background:var(--graphite); color:#fff; border-color:var(--graphite);}
+
+  /* Insurance */
+  .cover-badge{display:inline-flex; align-items:center; gap:6px; background:var(--good-bg); color:#2E5F38; font-size:10px; font-weight:700; padding:6px 10px; border-radius:20px; margin-bottom:10px;}
+
+  /* Capacity board */
+  .cap-row{background:#F4F2EC; border:1px solid #DAD6C9; border-radius:9px; padding:11px 12px; margin-bottom:8px;}
+  .cap-row .ctop{display:flex; justify-content:space-between; align-items:center;}
+  .cap-row .cname{font-size:12px; font-weight:800;}
+  .cap-row .cflag{font-size:9px; font-weight:700; padding:3px 7px; border-radius:20px;}
+  .cap-row .cmeta{font-size:10px; color:var(--steel); margin-top:5px; line-height:1.5;}
+
+  /* Fault codes */
+  .dtc-item{display:flex; gap:10px; align-items:flex-start; background:#F4F2EC; border:1px solid #DAD6C9; border-radius:9px; padding:11px; margin-bottom:8px;}
+  .dtc-code{font-family:'Courier New',monospace; font-weight:800; font-size:13px; background:var(--graphite); color:#fff; padding:4px 8px; border-radius:6px; flex-shrink:0;}
+  .dtc-item.crit .dtc-code{background:var(--rust);}
+  .dtc-desc{font-size:12px; font-weight:700;}
+  .dtc-sub{font-size:10px; color:var(--steel); margin-top:2px;}
+
+  /* Police lookup */
+  .verify-check{display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid #DAD6C9; font-size:13px; font-weight:700;}
+  .verify-check .vmark{width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:13px; color:#fff; flex-shrink:0;}
+  .verify-check .vmark.pass{background:var(--good);}
+  .verify-check .vmark.fail{background:var(--rust);}
+  .badge-authority{background:var(--graphite); color:var(--amber); font-size:9px; font-weight:800; letter-spacing:0.08em; padding:5px 10px; border-radius:5px; display:inline-block; text-transform:uppercase; margin-bottom:10px;}
+
+  /* News feed */
+  .news-card{background:#F4F2EC; border:1px solid #DAD6C9; border-radius:10px; padding:12px; margin-bottom:10px;}
+  .news-cat{font-size:8px; font-weight:800; text-transform:uppercase; letter-spacing:0.06em; padding:2px 7px; border-radius:20px; display:inline-block; margin-bottom:6px;}
+  .news-cat.recall{background:var(--bad-bg); color:var(--bad-fg);}
+  .news-cat.industry{background:var(--good-bg); color:#2E5F38;}
+  .news-cat.tips{background:var(--warn-bg); color:var(--warn-fg);}
+  .news-title{font-size:13px; font-weight:800; margin-bottom:3px;}
+  .news-sub{font-size:10px; color:var(--steel);}
+
+  /* Appeals */
+  .appeal-card{background:#F4F2EC; border:1px solid #DAD6C9; border-radius:9px; padding:12px; margin-bottom:10px;}
+  .appeal-top{display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;}
+  .appeal-title{font-size:13px; font-weight:800;}
+  .appeal-type{font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; padding:3px 8px; border-radius:20px; background:var(--warn-bg); color:var(--warn-fg);}
+  .appeal-meta{font-size:10px; color:var(--steel); margin-bottom:8px;}
+  .appeal-reason-box{background:#fff; border:1px solid #C9C6BC; border-radius:6px; padding:8px; font-size:11px; color:var(--graphite); margin-bottom:8px;}
+  .appeal-reason-box label{display:block; font-size:9px; text-transform:uppercase; color:var(--steel); font-weight:700; margin-bottom:3px;}
+
+  /* Audit log */
+  .audit-entry{display:flex; gap:10px; padding:10px 0; border-bottom:1px solid #DAD6C9;}
+  .audit-entry .atime{font-family:'Courier New',monospace; font-size:10px; color:var(--steel-lt); width:78px; flex-shrink:0; padding-top:1px;}
+  .audit-entry .abody{flex:1;}
+  .audit-entry .aaction{font-size:12px; font-weight:700;}
+  .audit-entry .adetail{font-size:10.5px; color:var(--steel); margin-top:2px; line-height:1.5;}
+  .audit-entry .aactor{display:inline-block; background:var(--graphite); color:var(--amber); font-size:9px; font-weight:700; padding:2px 6px; border-radius:4px; margin-right:5px;}
+
+  .pitch-note{display:none;}
+
+  /* Deck description panel — sits beside the phone, fills the stage */
+  .deck-panel{width:420px; flex-shrink:0; display:none; padding-top:18px;}
+  .deck-panel.active{display:block;}
+  .deck-eyebrow{
+    font-size:11px; font-weight:800; letter-spacing:0.12em; text-transform:uppercase;
+    color:var(--amber); margin-bottom:10px;
+  }
+  .deck-title{
+    font-size:30px; font-weight:800; color:var(--paper); line-height:1.15;
+    font-family:'Arial Narrow',Arial,sans-serif; margin-bottom:18px;
+    padding-bottom:18px; border-bottom:1px solid var(--line);
+  }
+  .deck-body p{
+    font-size:14px; line-height:1.7; color:var(--paper-dim); margin:0 0 14px;
+  }
+  .deck-body p:last-child{margin-bottom:0;}
+  .deck-body b{color:var(--paper); font-weight:700;}
+
+  /* Service directory */
+  .svc-row{background:#F4F2EC; border:1px solid #DAD6C9; border-radius:9px; padding:11px; margin-bottom:8px; display:flex; align-items:center; gap:11px;}
+  .svc-row .svc-icon{width:38px; height:38px; border-radius:9px; background:var(--graphite); display:flex; align-items:center; justify-content:center; font-size:17px; flex-shrink:0;}
+  .svc-row .svc-name{font-size:12px; font-weight:800;}
+  .svc-row .svc-meta{font-size:10px; color:var(--steel); margin-top:2px;}
+  .svc-row .svc-dist{margin-left:auto; font-size:11px; font-weight:700; color:var(--steel); text-align:right; flex-shrink:0;}
+  .svc-row .svc-open{display:block; font-size:9px; color:#2E5F38; font-weight:700; margin-top:2px;}
+</style>
+</head>
+<body>
+
+<div class="hamburger" id="hamburger"><span></span><span></span><span></span></div>
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+<div class="app">
+  <div class="sidebar" data-mode="consumer">
+    <div class="brandmark" style="flex-direction:column; align-items:flex-start; gap:4px; padding-bottom:16px;">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span class="plate">&lt;/&gt;</span>
+        <span style="font-size:17px; font-weight:800; letter-spacing:-0.01em; color:var(--paper); font-family:'Arial Narrow',Arial,sans-serif;">STREET CODE</span>
+      </div>
+      <span style="font-size:9px; letter-spacing:0.1em; color:var(--steel-lt); text-transform:uppercase; padding-left:1px;">What runs the city, built like the street runs it</span>
+    </div>
+
+    <div class="app-switch">
+      <div class="app-switch-btn active" data-app="consumer">Street Code</div>
+      <div class="app-switch-btn" data-app="civic">Civic</div>
+    </div>
+
+    <div class="pillar-group" data-app="consumer">
+      <div class="pillar-title">Get Started</div>
+      <div class="nav-item" data-target="signup"><span class="dot"></span>Choose Account Type</div>
+      <div class="nav-item nav-secondary" data-target="verify"><span class="dot"></span>Garage Verification</div>
+    </div>
+
+    <div class="pillar-group" data-app="consumer">
+      <div class="pillar-title">Vehicle Backbone</div>
+      <div class="nav-item active" data-target="garage"><span class="dot"></span>Personal Garage</div>
+      <div class="nav-item nav-secondary" data-target="garageempty"><span class="dot"></span>Personal Garage (Empty)</div>
+      <div class="nav-item" data-target="passport"><span class="dot"></span>Vehicle Passport</div>
+      <div class="nav-item" data-target="addvehicle"><span class="dot"></span>Add a Vehicle</div>
+      <div class="nav-item nav-secondary" data-target="reportstolen"><span class="dot"></span>Report Stolen / Missing</div>
+    </div>
+
+    <div class="pillar-group" data-app="consumer">
+      <div class="pillar-title">Insurance & Protection</div>
+      <div class="nav-item" data-target="insurance"><span class="dot"></span>Vehicle Insurance</div>
+      <div class="nav-item nav-secondary" data-target="compareinsurers"><span class="dot"></span>Compare Insurers</div>
+      <div class="nav-item nav-secondary" data-target="protection"><span class="dot"></span>Marketplace Protection</div>
+      <div class="nav-item nav-secondary" data-target="claim"><span class="dot"></span>File a Claim</div>
+    </div>
+
+    <div class="pillar-group" data-app="civic">
+      <div class="pillar-title">Fleet & Driver Ops</div>
+      <div class="nav-item" data-target="fleet"><span class="dot"></span>Fleet Dashboard</div>
+      <div class="nav-item nav-secondary" data-target="staff"><span class="dot"></span>Staff & Drivers</div>
+      <div class="nav-item nav-secondary" data-target="tracking"><span class="dot"></span>Pulse — Live Tracking</div>
+      <div class="nav-item nav-secondary" data-target="capacity"><span class="dot"></span>Vehicle Capacity Board</div>
+      <div class="nav-item nav-secondary" data-target="dispatch"><span class="dot"></span>Dispatch & Authorize</div>
+    </div>
+
+    <div class="pillar-group" data-app="consumer">
+      <div class="pillar-title">Garage Marketplace</div>
+      <div class="nav-item" data-target="findgarage"><span class="dot"></span>Find a Garage</div>
+      <div class="nav-item" data-target="request"><span class="dot"></span>Request a Job</div>
+      <div class="nav-item nav-secondary" data-target="gigs"><span class="dot"></span>Browse Gigs (Mechanic)</div>
+      <div class="nav-item" data-target="jobcard"><span class="dot"></span>Garage Job Card</div>
+      <div class="nav-item nav-secondary" data-target="messages"><span class="dot"></span>Messages</div>
+      <div class="nav-item nav-secondary" data-target="review"><span class="dot"></span>Leave a Review</div>
+    </div>
+
+    <div class="pillar-group" data-app="consumer">
+      <div class="pillar-title">Parts Sourcing</div>
+      <div class="nav-item nav-secondary" data-target="partsearch"><span class="dot"></span>Search & Filter</div>
+      <div class="nav-item" data-target="parts"><span class="dot"></span>Parts Catalog</div>
+      <div class="nav-item nav-secondary" data-target="checkout"><span class="dot"></span>Checkout</div>
+    </div>
+
+    <div class="pillar-group" data-app="consumer">
+      <div class="pillar-title">Diagnostics & Tools</div>
+      <div class="nav-item" data-target="scantool"><span class="dot"></span>Connect Scan Tool</div>
+      <div class="nav-item" data-target="faultcodes"><span class="dot"></span>Fault Codes & Mileage</div>
+    </div>
+
+    <div class="pillar-group" data-app="consumer">
+      <div class="pillar-title">Mobility</div>
+      <div class="nav-item nav-secondary" data-target="browsemobility"><span class="dot"></span>Browse Vehicles</div>
+      <div class="nav-item" data-target="mobility"><span class="dot"></span>Book a Vehicle</div>
+      <div class="nav-item nav-secondary" data-target="confirmed"><span class="dot"></span>Booking Confirmed</div>
+      <div class="nav-item" data-target="riderequest"><span class="dot"></span>Driver: Incoming Ride</div>
+      <div class="nav-item nav-secondary" data-target="tripprogress"><span class="dot"></span>Driver: Trip in Progress</div>
+      <div class="nav-item nav-secondary" data-target="tripearnings"><span class="dot"></span>Driver: Trip Complete</div>
+    </div>
+
+    <div class="pillar-group" data-app="consumer">
+      <div class="pillar-title">Vehicle Sales Marketplace</div>
+      <div class="nav-item" data-target="browselistings"><span class="dot"></span>Browse Listings</div>
+      <div class="nav-item" data-target="listvehicle"><span class="dot"></span>List My Vehicle</div>
+      <div class="nav-item nav-secondary" data-target="dealerinventory"><span class="dot"></span>Dealer Inventory</div>
+    </div>
+
+    <div class="pillar-group" data-app="consumer">
+      <div class="pillar-title">Utilities & Services</div>
+      <div class="nav-item" data-target="services"><span class="dot"></span>Fuel, Charging & Services</div>
+      <div class="nav-item nav-secondary" data-target="routes"><span class="dot"></span>Routes & Navigation</div>
+    </div>
+
+    <div class="pillar-group" data-app="consumer">
+      <div class="pillar-title">Personal Collection & Car Culture</div>
+      <div class="nav-item" data-target="culture"><span class="dot"></span>Feed</div>
+      <div class="nav-item" data-target="collection"><span class="dot"></span>My Collection</div>
+      <div class="nav-item nav-secondary" data-target="pubprofile"><span class="dot"></span>Collection Profile (Public)</div>
+      <div class="nav-item nav-secondary" data-target="event"><span class="dot"></span>Event Detail</div>
+    </div>
+
+    <div class="pillar-group" data-app="consumer">
+      <div class="pillar-title">Account & Infrastructure</div>
+      <div class="nav-item" data-target="notifications"><span class="dot"></span>Notifications</div>
+      <div class="nav-item" data-target="payments"><span class="dot"></span>Payments & Payouts</div>
+      <div class="nav-item nav-secondary" data-target="paymethods"><span class="dot"></span>Payment Methods</div>
+      <div class="nav-item" data-target="settings"><span class="dot"></span>Settings</div>
+    </div>
+
+    <div class="pillar-group" data-app="civic">
+      <div class="pillar-title">Platform Admin</div>
+      <div class="nav-item" data-target="adminqueue"><span class="dot"></span>Verification Queue</div>
+      <div class="nav-item nav-secondary" data-target="admindispute"><span class="dot"></span>Dispute Resolution</div>
+      <div class="nav-item nav-secondary" data-target="appeals"><span class="dot"></span>Appeals & Overrides</div>
+      <div class="nav-item nav-secondary" data-target="auditlog"><span class="dot"></span>Audit Log</div>
+    </div>
+
+    <div class="pillar-group" data-app="civic">
+      <div class="pillar-title">Law Enforcement Access</div>
+      <div class="nav-item" data-target="policelookup"><span class="dot"></span>Plate / VIN Lookup</div>
+      <div class="nav-item" data-target="stolenalerts"><span class="dot"></span>Stolen Vehicle Alerts</div>
+      <div class="nav-item nav-secondary" data-target="roadside"><span class="dot"></span>Roadside Verification</div>
+      <div class="nav-item nav-secondary" data-target="violation"><span class="dot"></span>Violation Resolution</div>
+    </div>
+  </div>
+
+  <div class="stage">
+    <div class="sibling-nav" id="siblingNav"></div>
+    <div class="stage-row">
+    <div class="phone">
+      <div class="notch"></div>
+
+      <!-- SIGN UP: CHOOSE ACCOUNT TYPE -->
+      <div class="screen" id="signup">
+        <div class="app-header"><div><div class="eyebrow">Welcome</div><h1>What brings you here?</h1></div></div>
+        <div class="role-card sel"><div class="ricon">🚗</div><div><div class="rname">Vehicle Owner</div><div class="rsub">Track service, book repairs, hire out your car</div></div></div>
+        <div class="role-card"><div class="ricon">🏆</div><div><div class="rname">Collector / Enthusiast</div><div class="rsub">Manage a collection, join car culture</div></div></div>
+        <div class="role-card"><div class="ricon">🚚</div><div><div class="rname">Fleet Company</div><div class="rsub">Manage multiple vehicles and drivers</div></div></div>
+        <div class="role-card"><div class="ricon">🔧</div><div><div class="rname">Garage / Mechanic</div><div class="rsub">Take jobs, manage a shop, or freelance</div></div></div>
+        <div class="role-card"><div class="ricon">📦</div><div><div class="rname">Parts Supplier</div><div class="rsub">List inventory, fulfil orders</div></div></div>
+        <div class="role-card"><div class="ricon">🧭</div><div><div class="rname">Driver</div><div class="rsub">Offer rides, hire, or chauffeur services</div></div></div>
+        <div class="role-card"><div class="ricon">🏢</div><div><div class="rname">Dealership</div><div class="rsub">List and sell vehicles from your inventory</div></div></div>
+        <div class="role-card"><div class="ricon">🔑</div><div><div class="rname">Rental Company</div><div class="rsub">List a fleet for daily hire or long-term lease</div></div></div>
+        <div class="role-card"><div class="ricon">📋</div><div><div class="rname">Insurance Broker</div><div class="rsub">Compare and place cover across multiple insurers</div></div></div>
+        <div class="action-row"><div class="btn primary">Continue</div></div>
+      </div>
+
+      <!-- GARAGE VERIFICATION (KYC) -->
+      <div class="screen" id="verify">
+        <div class="app-header"><div><div class="eyebrow">Garage / Mechanic Setup</div><h1>Verify Your Business</h1></div></div>
+        <div class="field"><label>Business name</label><input type="text" placeholder="Timbooba Motors"></div>
+        <div class="field"><label>Business registration / license no.</label><input type="text" placeholder="GM-2026-04471"></div>
+        <div class="field"><label>Specialties</label><div class="input-like" style="color:var(--steel);">Brakes, Diagnostics, Suspension</div></div>
+        <div class="field"><label>Upload documents</label></div>
+        <div class="scan-box">📄 Business license<br><span style="color:var(--steel-lt)">Tap to upload</span></div>
+        <div class="scan-box">🪪 Owner ID</div>
+        <div class="section-label">Status</div>
+        <div class="card"><div class="row"><span class="k">Review time</span><span class="v">Usually under 48 hrs</span></div></div>
+        <div class="action-row"><div class="btn primary">Submit for Review</div></div>
+      </div>
+      <div class="screen active" id="garage">
+        <div class="app-header">
+          <div><div class="eyebrow">Good morning, Kaabu</div><h1>My Garage</h1></div>
+          <div class="avatar"></div>
+        </div>
+        <div class="vin-plate">
+          <span class="status-chip due">Service due</span>
+          <div class="make-model">2019 Toyota Land Cruiser</div>
+          <div class="meta-row"><div><b>41,205 mi</b>Mileage</div><div><b>Prado TX</b>Trim</div></div>
+          <div class="vin-row"><span>VIN JTMHY7AJ...4X2091</span><span>View →</span></div>
+        </div>
+        <div class="vin-plate">
+          <span class="status-chip ok">Up to date</span>
+          <div class="make-model">2022 Honda CR-V</div>
+          <div class="meta-row"><div><b>12,880 mi</b>Mileage</div><div><b>EX-L</b>Trim</div></div>
+          <div class="vin-row"><span>VIN 5J6RW2H8...7C1183</span><span>View →</span></div>
+        </div>
+        <div class="stat-strip">
+          <div class="stat"><div class="num">2</div><div class="lbl">Vehicles</div></div>
+          <div class="stat"><div class="num">1</div><div class="lbl">Due Soon</div></div>
+          <div class="stat"><div class="num">D0</div><div class="lbl">Open Jobs</div></div>
+        </div>
+        <div class="section-label">Quick actions</div>
+        <div class="action-row"><div class="btn primary">Log Mileage</div><div class="btn ghost">Request Job</div></div>
+        <div class="action-row"><div class="btn ghost">Add Vehicle</div><div class="btn ghost">Personal Collection</div></div>
+        <div class="action-row"><div class="btn ghost" style="border-color:var(--rust); color:var(--rust);" onclick="activateScreen('reportstolen')">🚨 Report Vehicle Stolen / Missing</div></div>
+      </div>
+
+      <!-- REPORT VEHICLE STOLEN -->
+      <div class="screen" id="reportstolen">
+        <div class="app-header"><div><div class="eyebrow">Vehicle Backbone</div><h1>Report Stolen / Missing</h1></div></div>
+        <div class="cover-badge" style="background:var(--bad-bg); color:var(--bad-fg);">This broadcasts nationwide the moment you submit</div>
+        <div class="field"><label>Vehicle</label><div class="input-like" style="color:var(--steel);">2019 Toyota Land Cruiser — ...4X2091</div></div>
+        <div class="field"><label>Last seen location</label><input type="text" placeholder="e.g. Senegambia Strip, Kololi"></div>
+        <div class="field"><label>Date & time last seen</label><input type="text" placeholder="Today, 6:30 PM"></div>
+        <div class="field"><label>What happened?</label></div>
+        <textarea class="review-box" placeholder="Parked outside, gone within an hour…"></textarea>
+        <div class="scan-box">📷 Add a recent photo if you have one</div>
+        <div class="action-row"><div class="btn primary">Submit Nationwide Alert</div></div>
+      </div>
+
+      <!-- PERSONAL GARAGE — EMPTY STATE -->
+      <div class="screen" id="garageempty">
+        <div class="app-header"><div><div class="eyebrow">Good morning, new user</div><h1>My Garage</h1></div><div class="avatar"></div></div>
+        <div class="scan-box" style="padding:40px 18px;">🚗<br><br><b style="color:var(--graphite);">No vehicles yet</b><br>Add your first vehicle by VIN to start building its service history — even a used car with no prior records here begins its trusted history the day you add it.</div>
+        <div class="action-row"><div class="btn primary">Add a Vehicle</div></div>
+        <div class="section-label">Or explore first</div>
+        <div class="action-row"><div class="btn ghost">Find a Garage Nearby</div></div>
+        <div class="action-row"><div class="btn ghost">Browse Car Culture</div></div>
+      </div>
+
+      <!-- VEHICLE PASSPORT -->
+      <div class="screen" id="passport">
+        <div class="app-header"><div><div class="eyebrow">Public vehicle record</div><h1>Passport</h1></div></div>
+        <div class="vin-plate">
+          <div class="make-model">2019 Toyota Land Cruiser Prado TX</div>
+          <div class="meta-row"><div><b>41,205 mi</b>Current mileage</div><div><b>2 owners</b>Ownership</div></div>
+          <div class="vin-row"><span>JTMHY7AJXK4X2091</span><span>Verified ✓</span></div>
+        </div>
+        <div class="section-label">Ownership history</div>
+        <div class="timeline-item"><div class="dot2"></div><div class="body"><div class="title">Kaabu Corp (current)</div><div class="sub">Since Mar 2023 · Banjul</div></div></div>
+        <div class="timeline-item"><div class="dot2" style="background:var(--steel-lt)"></div><div class="body"><div class="title">First owner</div><div class="sub">2019 – 2023 · Dealer import</div></div></div>
+        <div class="timeline-item"><div class="dot2" style="background:var(--steel-lt)"></div><div class="body"><div class="title">Cleared through Gambia Ports Authority, Banjul</div><div class="sub">2019 · Import duty paid to GRA, clearing agent: Kombo Freight Services</div></div></div>
+        <div class="section-label">Registration & road tax (GRA)</div>
+        <div class="card">
+          <div class="row"><span class="k">Registration status</span><span class="v" style="color:#2E5F38;">Current</span></div>
+          <div class="row"><span class="k">Road tax</span><span class="v" style="color:#2E5F38;">Paid through Dec 2026</span></div>
+          <div class="row"><span class="k">Import duty</span><span class="v">Cleared, GRA ref. GRA-2019-77281</span></div>
+        </div>
+        <div class="section-label">Service history</div>
+        <div class="timeline-item"><div class="dot2"></div><div class="body"><div class="title">Full service — Timbooba Motors</div><div class="sub">38,900 mi · June 2026</div></div><div class="amt">D12,600</div></div>
+        <div class="timeline-item"><div class="dot2"></div><div class="body"><div class="title">Brake pads replaced</div><div class="sub">31,400 mi · Nov 2025</div></div><div class="amt">D6,650</div></div>
+        <div class="timeline-item"><div class="dot2"></div><div class="body"><div class="title">Oil + filter change</div><div class="sub">24,100 mi · Apr 2025</div></div><div class="amt">D2,800</div></div>
+        <div class="action-row"><div class="btn ghost">Renew Road Tax (GRA)</div><div class="btn primary">Share Passport Link</div></div>
+      </div>
+
+      <!-- VEHICLE INSURANCE -->
+      <div class="screen" id="insurance">
+        <div class="app-header"><div><div class="eyebrow">Insurance & Protection</div><h1>Vehicle Insurance</h1></div></div>
+        <div class="cover-badge">✓ Active coverage</div>
+        <div class="paycard">
+          <div class="pcrow"><span>Provider</span><span>GAMSTAR Insurance</span></div>
+          <div class="pcnum">POL-2026-88413</div>
+          <div class="pcrow"><span>Vehicle</span><span>Land Cruiser · ...4X2091</span></div>
+        </div>
+        <div class="card">
+          <div class="row"><span class="k">Coverage type</span><span class="v">Comprehensive</span></div>
+          <div class="row"><span class="k">Expires</span><span class="v">Dec 14, 2026</span></div>
+          <div class="row"><span class="k">Premium</span><span class="v">D2,400/mo</span></div>
+          <div class="row"><span class="k">Linked to passport</span><span class="v">Yes ✓</span></div>
+        </div>
+        <div class="action-row"><div class="btn ghost">View Policy PDF</div><div class="btn primary">Renew</div></div>
+      </div>
+
+      <!-- MARKETPLACE PROTECTION -->
+      <div class="screen" id="protection">
+        <div class="app-header"><div><div class="eyebrow">Insurance & Protection</div><h1>Marketplace Protection</h1></div></div>
+        <div class="cover-badge">✓ This transaction is protected</div>
+        <div class="card">
+          <div class="row"><span class="k">Repair jobs</span><span class="v">Covered up to D140,000</span></div>
+          <div class="row"><span class="k">Mobility bookings</span><span class="v">Covered up to D350,000</span></div>
+          <div class="row"><span class="k">Ride trips</span><span class="v">Third-party liability included</span></div>
+        </div>
+        <div class="section-label">How it works</div>
+        <div class="timeline-item"><div class="dot2"></div><div class="body"><div class="title">Funds held in escrow</div><div class="sub">Released only once you confirm the job or trip is done right</div></div></div>
+        <div class="timeline-item"><div class="dot2"></div><div class="body"><div class="title">Damage or dispute?</div><div class="sub">File a claim — average resolution in 3 days</div></div></div>
+        <div class="action-row"><div class="btn primary">File a Claim</div></div>
+      </div>
+
+      <!-- FILE A CLAIM -->
+      <div class="screen" id="claim">
+        <div class="app-header"><div><div class="eyebrow">Insurance & Protection</div><h1>File a Claim</h1></div></div>
+        <div class="field"><label>Related to</label><div class="input-like" style="color:var(--steel);">Booking #BK-1042 — Honda CR-V</div></div>
+        <div class="field"><label>Incident type</label><div class="input-like" style="color:var(--steel);">Damage / Accident</div></div>
+        <div class="field"><label>Date of incident</label><input type="text" placeholder="Aug 4, 2026"></div>
+        <div class="field"><label>What happened?</label></div>
+        <textarea class="review-box" style="min-height:70px;" placeholder="Describe what happened…"></textarea>
+        <div class="scan-box">📷 Upload photos of the damage</div>
+        <div class="action-row"><div class="btn primary">Submit Claim</div></div>
+      </div>
+
+      <!-- ADD A VEHICLE -->
+      <div class="screen" id="addvehicle">
+        <div class="app-header"><div><div class="eyebrow">Vehicle Backbone</div><h1>Add a Vehicle</h1></div></div>
+        <div class="scan-box">📷 Scan VIN plate or windshield sticker<br><span style="color:var(--steel-lt)">or enter manually below</span></div>
+        <div class="field"><label>VIN</label><input type="text" placeholder="e.g. JTMHY7AJXK4X2091"></div>
+        <div class="section-label">Decoded from VIN</div>
+        <div class="card">
+          <div class="row"><span class="k">Make / Model</span><span class="v">Toyota Land Cruiser</span></div>
+          <div class="row"><span class="k">Year</span><span class="v">2019</span></div>
+          <div class="row"><span class="k">Trim</span><span class="v">Prado TX</span></div>
+          <div class="row"><span class="k">Engine</span><span class="v">2.8L Turbo Diesel</span></div>
+        </div>
+        <div class="field"><label>Current mileage</label><input type="text" placeholder="41,205"></div>
+        <div class="action-row"><div class="btn primary">Add to My Garage</div></div>
+      </div>
+
+      <!-- CONNECT SCAN TOOL -->
+      <div class="screen" id="scantool">
+        <div class="app-header"><div><div class="eyebrow">Diagnostics & Tools</div><h1>Connect Scan Tool</h1></div></div>
+        <div class="scan-box">🔌 Plug an OBD-II adapter into your vehicle's port, then scan below</div>
+        <div class="section-label">Nearby devices</div>
+        <div class="search-result"><div><div class="sname">OBDLink MX+</div><div class="smeta">Bluetooth · Signal strong</div></div><div class="btn ghost small" style="flex:none;">Connect</div></div>
+        <div class="search-result"><div><div class="sname">BAFX 34t3</div><div class="smeta">Bluetooth · Signal weak</div></div><div class="btn ghost small" style="flex:none;">Connect</div></div>
+        <div class="section-label">Connected</div>
+        <div class="card">
+          <div class="row"><span class="k">Vehicle</span><span class="v">Toyota Land Cruiser</span></div>
+          <div class="row"><span class="k">Live odometer</span><span class="v">41,205 mi</span></div>
+          <div class="row"><span class="k">Engine status</span><span class="v" style="color:#2E5F38;">Normal</span></div>
+        </div>
+        <div class="action-row"><div class="btn primary">Scan for Fault Codes</div></div>
+      </div>
+
+      <!-- FAULT CODES & MILEAGE -->
+      <div class="screen" id="faultcodes">
+        <div class="app-header"><div><div class="eyebrow">Land Cruiser · Live scan</div><h1>Fault Codes</h1></div></div>
+        <div class="stat-strip">
+          <div class="stat"><div class="num">41,205</div><div class="lbl">Odometer (mi)</div></div>
+          <div class="stat"><div class="num">2</div><div class="lbl">Active Codes</div></div>
+        </div>
+        <div class="section-label">Detected codes</div>
+        <div class="dtc-item crit">
+          <div class="dtc-code">P0301</div>
+          <div><div class="dtc-desc">Cylinder 1 Misfire Detected</div><div class="dtc-sub">Critical · may affect performance</div></div>
+        </div>
+        <div class="dtc-item">
+          <div class="dtc-code">P0442</div>
+          <div><div class="dtc-desc">EVAP System Small Leak</div><div class="dtc-sub">Minor · monitor over time</div></div>
+        </div>
+        <div class="section-label">Mileage log sync</div>
+        <div class="card"><div class="row"><span class="k">Auto-synced from scan tool</span><span class="v">Just now</span></div></div>
+        <div class="action-row"><div class="btn ghost">Save to Vehicle</div><div class="btn primary">Request a Job</div></div>
+      </div>
+
+      <!-- FLEET DASHBOARD -->
+      <div class="screen" id="fleet">
+        <div class="app-header"><div><div class="eyebrow">SBR Logistics Fleet</div><h1>Fleet Dashboard</h1></div><div class="avatar"></div></div>
+        <div class="stat-strip">
+          <div class="stat"><div class="num">14</div><div class="lbl">Vehicles</div></div>
+          <div class="stat"><div class="num">2</div><div class="lbl">Compliance</div></div>
+          <div class="stat"><div class="num">D224K</div><div class="lbl">Month Cost</div></div>
+        </div>
+        <div class="section-label">Vehicles</div>
+        <div class="flist">
+          <div class="frow"><div><div class="name">Truck 04 — Isuzu NPR</div><div class="driver">Driver: A. Jallow</div></div><div class="flag" style="background:var(--good-bg); color:#2E5F38;">Active</div></div>
+          <div class="frow"><div><div class="name">Van 11 — Hiace</div><div class="driver">Driver: M. Ceesay</div></div><div class="flag" style="background:var(--warn-bg); color:var(--warn-fg);">Insurance due</div></div>
+          <div class="frow"><div><div class="name">Sedan 02 — Corolla</div><div class="driver">Unassigned</div></div><div class="flag" style="background:var(--bad-bg); color:var(--bad-fg);">In shop</div></div>
+          <div class="frow"><div><div class="name">Truck 07 — Isuzu NPR</div><div class="driver">Driver: S. Bah</div></div><div class="flag" style="background:var(--good-bg); color:#2E5F38;">Active</div></div>
+        </div>
+        <div class="section-label">Compliance alerts</div>
+        <div class="card">
+          <div class="row"><span class="k">Van 11 — insurance expires</span><span class="v">3 days</span></div>
+          <div class="row"><span class="k">Sedan 02 — inspection overdue</span><span class="v">7 days</span></div>
+        </div>
+        <div class="action-row"><div class="btn ghost">Manage Staff</div><div class="btn primary">Push Job to Garage</div></div>
+      </div>
+
+      <!-- STAFF & DRIVERS -->
+      <div class="screen" id="staff">
+        <div class="app-header"><div><div class="eyebrow">SBR Logistics Fleet</div><h1>Staff & Drivers</h1></div></div>
+        <div class="stat-strip">
+          <div class="stat"><div class="num">9</div><div class="lbl">Drivers</div></div>
+          <div class="stat"><div class="num">1</div><div class="lbl">License Exp.</div></div>
+          <div class="stat"><div class="num">2</div><div class="lbl">Unassigned</div></div>
+        </div>
+        <div class="section-label">Team</div>
+        <div class="driver-row"><div class="davatar"></div><div><div class="dname">A. Jallow</div><div class="dsub">Truck 04 · License valid to 2028</div></div><div class="dflag" style="background:var(--good-bg); color:#2E5F38;">Active</div></div>
+        <div class="driver-row"><div class="davatar"></div><div><div class="dname">M. Ceesay</div><div class="dsub">Van 11 · License valid to 2027</div></div><div class="dflag" style="background:var(--good-bg); color:#2E5F38;">Active</div></div>
+        <div class="driver-row"><div class="davatar"></div><div><div class="dname">S. Bah</div><div class="dsub">Truck 07 · License expires in 12 days</div></div><div class="dflag" style="background:var(--warn-bg); color:var(--warn-fg);">Renew</div></div>
+        <div class="driver-row"><div class="davatar"></div><div><div class="dname">F. Touray</div><div class="dsub">Unassigned</div></div><div class="dflag" style="background:#E5E2D8; color:var(--steel);">Bench</div></div>
+        <div class="action-row"><div class="btn primary">Add Driver</div></div>
+      </div>
+
+      <!-- PULSE — LIVE VEHICLE TRACKING -->
+      <div class="screen" id="tracking">
+        <div class="app-header"><div><div class="eyebrow">Pulse · Truck 04</div><h1>Live Tracking</h1></div></div>
+        <div class="cover-badge" style="background:var(--warn-bg); color:var(--warn-fg);">Required for tenant fleet vehicles during work hours</div>
+        <div class="track-map">
+          <div class="track-route"></div>
+          <div class="track-dot" style="top:52%; left:46%;"></div>
+        </div>
+        <div class="speedo">
+          <div class="sbox"><div class="snum">54</div><div class="slbl">km/h</div></div>
+          <div class="sbox"><div class="snum">12.4</div><div class="slbl">km today</div></div>
+          <div class="sbox"><div class="snum">On route</div><div class="slbl">Status</div></div>
+        </div>
+        <div class="section-label">Current trip</div>
+        <div class="card">
+          <div class="row"><span class="k">Driver</span><span class="v">A. Jallow</span></div>
+          <div class="row"><span class="k">Route</span><span class="v">Warehouse → Serrekunda</span></div>
+          <div class="row"><span class="k">ETA</span><span class="v">18 min</span></div>
+          <div class="row"><span class="k">Synced via</span><span class="v">OBD + Bluetooth</span></div>
+        </div>
+        <div class="section-label">Geofence alerts</div>
+        <div class="card"><div class="row"><span class="k">Left approved zone</span><span class="v" style="color:var(--warn-fg);">2 days ago</span></div></div>
+        <div class="action-row"><div class="btn ghost">Trip History</div><div class="btn primary">Message Driver</div></div>
+      </div>
+
+      <!-- VEHICLE CAPACITY BOARD -->
+      <div class="screen" id="capacity">
+        <div class="app-header"><div><div class="eyebrow">SBR Logistics Fleet</div><h1>Capacity Board</h1></div></div>
+        <div class="stat-strip">
+          <div class="stat"><div class="num">9</div><div class="lbl">Available</div></div>
+          <div class="stat"><div class="num">4</div><div class="lbl">On Mission</div></div>
+          <div class="stat"><div class="num">1</div><div class="lbl">In Shop</div></div>
+        </div>
+        <div class="section-label">Live status</div>
+        <div class="cap-row">
+          <div class="ctop"><span class="cname">Truck 04 — Isuzu NPR</span><span class="cflag" style="background:var(--warn-bg); color:var(--warn-fg);">On mission</span></div>
+          <div class="cmeta">Held by A. Jallow · Mission: Serrekunda delivery run<br>Authorized by S. Ceesay (Ops Manager) · Since 9:12 AM</div>
+        </div>
+        <div class="cap-row">
+          <div class="ctop"><span class="cname">Van 11 — Hiace</span><span class="cflag" style="background:var(--good-bg); color:#2E5F38;">Available</span></div>
+          <div class="cmeta">At depot · Last used by M. Ceesay, returned 6:40 AM</div>
+        </div>
+        <div class="cap-row">
+          <div class="ctop"><span class="cname">Bike 02 — Yamaha</span><span class="cflag" style="background:var(--warn-bg); color:var(--warn-fg);">On mission</span></div>
+          <div class="cmeta">Held by F. Touray · Mission: Parts pickup — Kombo<br>Authorized by S. Ceesay · Since 10:02 AM</div>
+        </div>
+        <div class="cap-row">
+          <div class="ctop"><span class="cname">Sedan 02 — Corolla</span><span class="cflag" style="background:var(--bad-bg); color:var(--bad-fg);">In shop</span></div>
+          <div class="cmeta">At Timbooba Motors · Job #2291</div>
+        </div>
+        <div class="action-row"><div class="btn primary">Authorize New Dispatch</div></div>
+      </div>
+
+      <!-- DISPATCH & AUTHORIZE -->
+      <div class="screen" id="dispatch">
+        <div class="app-header"><div><div class="eyebrow">Fleet · New Dispatch</div><h1>Authorize Vehicle Use</h1></div></div>
+        <div class="stepper">
+          <div class="step done"><div class="bar"></div><div class="lbl">Requested</div></div>
+          <div class="step current"><div class="bar"></div><div class="lbl">Authorizing</div></div>
+          <div class="step"><div class="bar"></div><div class="lbl">Checked Out</div></div>
+          <div class="step"><div class="bar"></div><div class="lbl">Returned</div></div>
+        </div>
+        <div class="field"><label>Vehicle</label><div class="input-like" style="color:var(--steel);">Van 11 — Hiace</div></div>
+        <div class="field"><label>Requested by</label><div class="input-like" style="color:var(--steel);">F. Touray</div></div>
+        <div class="field"><label>Mission / purpose</label><input type="text" placeholder="e.g. Airport pickup — client run"></div>
+        <div class="field"><label>Expected return</label><input type="text" placeholder="6:00 PM today"></div>
+        <div class="card"><div class="row"><span class="k">Requires authorization from</span><span class="v">S. Ceesay (Ops Manager)</span></div></div>
+        <div class="action-row"><div class="btn ghost">Deny</div><div class="btn primary">Authorize & Check Out</div></div>
+      </div>
+
+      <!-- FIND A GARAGE -->
+      <div class="screen" id="findgarage">
+        <div class="app-header"><div><div class="eyebrow">Garage Marketplace</div><h1>Find a Garage</h1></div></div>
+        <div class="map-placeholder">
+          <div class="map-pin" style="top:30%; left:40%;"></div>
+          <div class="map-pin" style="top:55%; left:60%; background:var(--graphite);"></div>
+          <div class="map-pin" style="top:70%; left:30%; background:var(--graphite);"></div>
+        </div>
+        <div class="search-result">
+          <div><div class="sname">Timbooba Motors</div><div class="smeta"><span class="stars">★★★★★</span> 4.9 · Brakes, Diagnostics</div></div>
+          <div class="sdist">0.8 mi</div>
+        </div>
+        <div class="search-result">
+          <div><div class="sname">Kombo Auto Care</div><div class="smeta"><span class="stars">★★★★☆</span> 4.6 · Full service</div></div>
+          <div class="sdist">1.4 mi</div>
+        </div>
+        <div class="search-result">
+          <div><div class="sname">Fajara Fast Fix</div><div class="smeta"><span class="stars">★★★★☆</span> 4.4 · Quick turnaround</div></div>
+          <div class="sdist">2.1 mi</div>
+        </div>
+        <div class="action-row"><div class="btn primary">Request a Job</div></div>
+      </div>
+
+      <!-- REQUEST A JOB (customer side of marketplace) -->
+      <div class="screen" id="request">
+        <div class="app-header"><div><div class="eyebrow">Marketplace · Job #2291</div><h1>Compare Quotes</h1></div></div>
+        <div class="vin-plate" style="margin-bottom:14px;">
+          <div class="make-model">Brake pads + inspection</div>
+          <div class="meta-row"><div><b>Land Cruiser</b>Vehicle</div><div><b>Banjul</b>Location</div></div>
+        </div>
+        <div class="section-label">3 garages quoted</div>
+        <div class="quote">
+          <div class="top"><span class="shop">Timbooba Motors</span><span class="price">D9,500</span></div>
+          <div class="meta"><span class="stars">★★★★★</span> 4.9 · 210 jobs · Same-day slot</div>
+        </div>
+        <div class="quote">
+          <div class="top"><span class="shop">Kombo Auto Care</span><span class="price">D10,800</span></div>
+          <div class="meta"><span class="stars">★★★★☆</span> 4.6 · 88 jobs · Tomorrow 9am</div>
+        </div>
+        <div class="quote">
+          <div class="top"><span class="shop">Fajara Fast Fix</span><span class="price">D8,400</span></div>
+          <div class="meta"><span class="stars">★★★★☆</span> 4.4 · 34 jobs · Thu 2pm</div>
+        </div>
+        <div class="action-row"><div class="btn primary">Accept Timbooba Motors</div></div>
+      </div>
+
+      <!-- BROWSE GIGS (independent mechanic) -->
+      <div class="screen" id="gigs">
+        <div class="app-header"><div><div class="eyebrow">Mechanic · Freelance</div><h1>Open Gigs Near You</h1></div></div>
+        <div class="role-toggle"><div class="opt on">Nearby</div><div class="opt">Highest Pay</div><div class="opt">Newest</div></div>
+        <div class="gig">
+          <div class="gtop"><span class="gtitle">Brake inspection + pads</span><span class="gpay">D9,500</span></div>
+          <div class="gmeta">Toyota Land Cruiser · Banjul · Posted 20 min ago</div>
+          <div class="gtags"><span class="tag">Brakes</span><span class="tag">Same-day</span></div>
+        </div>
+        <div class="gig">
+          <div class="gtop"><span class="gtitle">Full service — 40k mile</span><span class="gpay">D12,600</span></div>
+          <div class="gmeta">Honda CR-V · Bakau · Posted 1 hr ago</div>
+          <div class="gtags"><span class="tag">Service</span></div>
+        </div>
+        <div class="gig">
+          <div class="gtop"><span class="gtitle">Diagnostic — check engine light</span><span class="gpay">D3,150</span></div>
+          <div class="gmeta">Corolla AE86 · Fajara · Posted 3 hrs ago</div>
+          <div class="gtags"><span class="tag">Diagnostics</span></div>
+        </div>
+        <div class="action-row"><div class="btn primary">Submit a Quote</div></div>
+      </div>
+
+      <!-- GARAGE JOB CARD -->
+      <div class="screen" id="jobcard">
+        <div class="app-header"><div><div class="eyebrow">Timbooba Motors · Job #2291</div><h1>Job Card</h1></div></div>
+        <div class="stepper">
+          <div class="step done"><div class="bar"></div><div class="lbl">Quoted</div></div>
+          <div class="step done"><div class="bar"></div><div class="lbl">Approved</div></div>
+          <div class="step current"><div class="bar"></div><div class="lbl">In Progress</div></div>
+          <div class="step"><div class="bar"></div><div class="lbl">Complete</div></div>
+        </div>
+        <div class="card">
+          <div class="row"><span class="k">Vehicle</span><span class="v">Toyota Land Cruiser</span></div>
+          <div class="row"><span class="k">VIN</span><span class="v">...4X2091</span></div>
+          <div class="row"><span class="k">Customer</span><span class="v">Kaabu Corp</span></div>
+          <div class="row"><span class="k">Mileage in</span><span class="v">41,205 mi</span></div>
+        </div>
+        <div class="section-label">Diagnostics</div>
+        <div class="photo-strip">
+          <div class="ph media-ph"><span class="micon">🚙</span><span class="mlabel">Land Cruiser</span></div>
+          <div class="ph media-ph"><span class="micon">🛞</span><span class="mlabel">Brake pad</span></div>
+          <div class="ph media-ph video"><span class="micon">🔧</span><span class="mlabel">Repair clip</span></div>
+        </div>
+        <div class="section-label">Parts used</div>
+        <div class="card">
+          <div class="row"><span class="k">Brake pad set (front)</span><span class="v">D4,300</span></div>
+          <div class="row"><span class="k">Cabin air filter</span><span class="v">D1,250</span></div>
+          <div class="row"><span class="k">Labor — 2.5 hrs</span><span class="v">D5,250</span></div>
+        </div>
+        <div class="action-row"><div class="btn ghost">Message Customer</div><div class="btn primary">Mark Complete</div></div>
+      </div>
+
+      <!-- MESSAGES -->
+      <div class="screen" id="messages">
+        <div class="app-header"><div><div class="eyebrow">Job #2291</div><h1>Timbooba Motors</h1></div></div>
+        <div class="chat-thread">
+          <div class="bubble them">Hi Kaabu, we've inspected the Land Cruiser — brake pads are worn but rotors look fine.</div>
+          <div class="chat-time">10:12 AM</div>
+          <div class="bubble me">Good to hear. Go ahead with the pad replacement.</div>
+          <div class="bubble them">On it. Should be done by 4pm today, we'll send photos before closing the job.</div>
+          <div class="chat-time">10:15 AM</div>
+        </div>
+        <div class="chat-input"><span>Type a message…</span><div class="btn primary small" style="flex:none; padding:8px 14px;">Send</div></div>
+      </div>
+
+      <!-- LEAVE A REVIEW -->
+      <div class="screen" id="review">
+        <div class="app-header"><div><div class="eyebrow">Job #2291 · Complete</div><h1>Rate Timbooba Motors</h1></div></div>
+        <div class="vin-plate" style="margin-bottom:6px;">
+          <div class="make-model">Brake pads + inspection</div>
+          <div class="meta-row"><div><b>D9,500</b>Final cost</div><div><b>Same day</b>Turnaround</div></div>
+        </div>
+        <div class="star-row"><span class="on">★</span><span class="on">★</span><span class="on">★</span><span class="on">★</span><span>★</span></div>
+        <div class="section-label">Add a comment (optional)</div>
+        <textarea class="review-box" placeholder="Fast, honest, and the photos before/after were a nice touch."></textarea>
+        <div class="action-row"><div class="btn primary">Submit Review</div></div>
+      </div>
+
+      <!-- PARTS SEARCH & FILTER -->
+      <div class="screen" id="partsearch">
+        <div class="app-header"><div><div class="eyebrow">Parts Sourcing</div><h1>Search Parts</h1></div></div>
+        <div class="field"><input type="text" placeholder="Search brake pads, filters, belts…"></div>
+        <div class="section-label">Filter by</div>
+        <div class="filter-chip-row">
+          <div class="filter-chip on">Fits my vehicle</div>
+          <div class="filter-chip">OEM</div>
+          <div class="filter-chip">Aftermarket</div>
+          <div class="filter-chip">Recycled</div>
+          <div class="filter-chip">In stock</div>
+          <div class="filter-chip">Under D3,500</div>
+        </div>
+        <div class="section-label">Category</div>
+        <div class="flist">
+          <div class="frow"><div><div class="name">Brakes</div><div class="driver">142 parts</div></div><div>→</div></div>
+          <div class="frow"><div><div class="name">Suspension</div><div class="driver">88 parts</div></div><div>→</div></div>
+          <div class="frow"><div><div class="name">Filters & Fluids</div><div class="driver">61 parts</div></div><div>→</div></div>
+          <div class="frow"><div><div class="name">Electrical</div><div class="driver">54 parts</div></div><div>→</div></div>
+        </div>
+        <div class="action-row"><div class="btn primary">Show Results</div></div>
+      </div>
+
+      <!-- PARTS CATALOG -->
+      <div class="screen" id="parts">
+        <div class="app-header"><div><div class="eyebrow">Matched to your Land Cruiser</div><h1>Parts Catalog</h1></div></div>
+        <div class="role-toggle"><div class="opt on">OEM</div><div class="opt">Aftermarket</div><div class="opt">Recycled</div></div>
+        <div class="part">
+          <div><div class="pname">Front brake pad set <span class="fit-badge">Fits</span></div><div class="psub">Toyota Genuine · AutoWorld Supply</div></div>
+          <div class="pprice">D4,300</div>
+        </div>
+        <div class="part">
+          <div><div class="pname">Cabin air filter <span class="fit-badge">Fits</span></div><div class="psub">Toyota Genuine · Kombo Parts Depot</div></div>
+          <div class="pprice">D1,250</div>
+        </div>
+        <div class="part">
+          <div><div class="pname">Alternator belt <span class="fit-badge">Fits</span></div><div class="psub">Toyota Genuine · AutoWorld Supply</div></div>
+          <div class="pprice">D2,400</div>
+        </div>
+        <div class="part">
+          <div><div class="pname">Shock absorber (rear pair) <span class="fit-badge">Fits</span></div><div class="psub">Toyota Genuine · Serrekunda Auto Parts</div></div>
+          <div class="pprice">D14,700</div>
+        </div>
+        <div class="section-label">Delivery</div>
+        <div class="card"><div class="row"><span class="k">Fastest option</span><span class="v">2 days · Kombo Parts Depot</span></div></div>
+        <div class="action-row"><div class="btn primary">Add to Job Card</div></div>
+      </div>
+
+      <!-- CHECKOUT -->
+      <div class="screen" id="checkout">
+        <div class="app-header"><div><div class="eyebrow">Parts order</div><h1>Checkout</h1></div></div>
+        <div class="section-label">Order summary</div>
+        <div class="card">
+          <div class="row"><span class="k">Front brake pad set</span><span class="v">D4,300</span></div>
+          <div class="row"><span class="k">Cabin air filter</span><span class="v">D1,250</span></div>
+        </div>
+        <div class="section-label">Delivery</div>
+        <div class="card"><div class="row"><span class="k">Kombo Parts Depot</span><span class="v">2 days · D420</span></div></div>
+        <div class="section-label">Payment</div>
+        <div class="paymethod sel"><div class="micon2">📱</div><div><div class="mname">Afrimoney (Africell)</div><div class="msub">•••• 6621</div></div><span class="momo-tag">Default</span></div>
+        <div class="paymethod"><div class="micon2">💳</div><div><div class="mname">Visa •••• 4471</div><div class="msub">Card</div></div></div>
+        <div class="card">
+          <div class="price-line"><span>Parts</span><span>D5,600</span></div>
+          <div class="price-line"><span>Delivery</span><span>D420</span></div>
+          <div class="price-line total"><span>Total</span><span>D6,020</span></div>
+        </div>
+        <div class="action-row"><div class="btn primary">Place Order</div></div>
+      </div>
+
+      <!-- BROWSE VEHICLES (mobility search) -->
+      <div class="screen" id="browsemobility">
+        <div class="app-header"><div><div class="eyebrow">Mobility</div><h1>Browse Vehicles</h1></div></div>
+        <div class="filter-chip-row">
+          <div class="filter-chip on">This weekend</div>
+          <div class="filter-chip">Under D4,200/day</div>
+          <div class="filter-chip">SUV</div>
+          <div class="filter-chip">Verified history</div>
+        </div>
+        <div class="vin-plate">
+          <div class="vplate-thumb media-ph"><span class="micon">🚙</span><span class="mlabel">Honda CR-V EX-L</span></div>
+          <span class="status-chip ok">Verified history</span>
+          <div class="make-model">2022 Honda CR-V EX-L</div>
+          <div class="meta-row"><div><b>D4,000/day</b>Price</div><div><b>4.9 ★</b>Rating</div></div>
+          <div class="vin-row"><span>Bakau · 0.9 mi</span><span>View →</span></div>
+        </div>
+        <div class="vin-plate">
+          <div class="vplate-thumb media-ph"><span class="micon">🚙</span><span class="mlabel">Toyota RAV4</span></div>
+          <span class="status-chip ok">Verified history</span>
+          <div class="make-model">2020 Toyota RAV4</div>
+          <div class="meta-row"><div><b>D3,600/day</b>Price</div><div><b>4.7 ★</b>Rating</div></div>
+          <div class="vin-row"><span>Fajara · 2.3 mi</span><span>View →</span></div>
+        </div>
+        <div class="vin-plate">
+          <div class="vplate-thumb media-ph"><span class="micon">🚙</span><span class="mlabel">Nissan X-Trail</span></div>
+          <span class="status-chip due">History pending</span>
+          <div class="make-model">2018 Nissan X-Trail</div>
+          <div class="meta-row"><div><b>D2,900/day</b>Price</div><div><b>4.3 ★</b>Rating</div></div>
+          <div class="vin-row"><span>Serrekunda · 3.1 mi</span><span>View →</span></div>
+        </div>
+      </div>
+
+      <!-- FUEL, CHARGING & SERVICES -->
+      <div class="screen" id="services">
+        <div class="app-header"><div><div class="eyebrow">Utilities & Services</div><h1>Nearby</h1></div></div>
+        <div class="filter-chip-row">
+          <div class="filter-chip on">All</div>
+          <div class="filter-chip">⛽ Fuel</div>
+          <div class="filter-chip">🔋 EV Charging</div>
+          <div class="filter-chip">🛞 Tires</div>
+          <div class="filter-chip">🔨 Panel Beaters</div>
+          <div class="filter-chip">🛏️ Lodges</div>
+          <div class="filter-chip">🚨 Towing</div>
+        </div>
+        <div class="svc-row">
+          <div class="svc-icon">⛽</div>
+          <div><div class="svc-name">Total Kombo Fuel Station</div><div class="svc-meta">Petrol, Diesel<span class="svc-open">Open now</span></div></div>
+          <div class="svc-dist">0.6 mi</div>
+        </div>
+        <div class="svc-row">
+          <div class="svc-icon">🔋</div>
+          <div><div class="svc-name">GreenCharge Bakau</div><div class="svc-meta">2 fast chargers free<span class="svc-open">Open now</span></div></div>
+          <div class="svc-dist">1.1 mi</div>
+        </div>
+        <div class="svc-row">
+          <div class="svc-icon">🛞</div>
+          <div><div class="svc-name">Kombo Tyre Point</div><div class="svc-meta">All sizes, balancing<span class="svc-open">Open now</span></div></div>
+          <div class="svc-dist">1.4 mi</div>
+        </div>
+        <div class="svc-row">
+          <div class="svc-icon">🔨</div>
+          <div><div class="svc-name">Serrekunda Panel Beaters</div><div class="svc-meta">Bodywork, paint, dent repair</div></div>
+          <div class="svc-dist">2.2 mi</div>
+        </div>
+        <div class="svc-row">
+          <div class="svc-icon">🛏️</div>
+          <div><div class="svc-name">Kairaba Lodge</div><div class="svc-meta">Traveler stop · parking on-site</div></div>
+          <div class="svc-dist">3.0 mi</div>
+        </div>
+        <div class="svc-row">
+          <div class="svc-icon">🚨</div>
+          <div><div class="svc-name">Kombo 24hr Towing & Recovery</div><div class="svc-meta">Breakdown response<span class="svc-open">Open now</span></div></div>
+          <div class="svc-dist">1.8 mi</div>
+        </div>
+        <div class="action-row"><div class="btn primary">Get Directions</div></div>
+      </div>
+
+      <!-- ROUTES & NAVIGATION -->
+      <div class="screen" id="routes">
+        <div class="app-header"><div><div class="eyebrow">Utilities & Services</div><h1>Routes & Directions</h1></div></div>
+        <div class="track-map">
+          <div class="track-route"></div>
+          <div class="track-dot" style="top:55%; left:20%; background:var(--good);"></div>
+          <div class="track-dot" style="top:35%; left:75%;"></div>
+        </div>
+        <div class="card">
+          <div class="row"><span class="k">From</span><span class="v">Current location</span></div>
+          <div class="row"><span class="k">To</span><span class="v">Timbooba Motors, Banjul</span></div>
+          <div class="row"><span class="k">ETA</span><span class="v">14 min · 6.2 mi</span></div>
+        </div>
+        <div class="section-label">Along the way</div>
+        <div class="svc-row"><div class="svc-icon">⛽</div><div><div class="svc-name">Total Kombo Fuel Station</div><div class="svc-meta">2 min detour</div></div></div>
+        <div class="action-row"><div class="btn ghost">Avoid Tolls</div><div class="btn primary">Start Navigation</div></div>
+      </div>
+
+      <!-- MOBILITY BOOKING -->
+      <div class="screen" id="mobility">
+        <div class="app-header"><div><div class="eyebrow">Phase 3 preview</div><h1>Book a Vehicle</h1></div></div>
+        <div class="cover-badge">🛡 Driver & vehicle safety-checked via Street Code Civic</div>
+        <div class="vin-plate">
+          <span class="status-chip ok">Verified history</span>
+          <div class="make-model">2022 Honda CR-V EX-L</div>
+          <div class="meta-row"><div><b>4.9 ★</b>Owner rating</div><div><b>12,880 mi</b>Mileage</div></div>
+          <div class="vin-row"><span>Full service log on file</span><span>Passport →</span></div>
+        </div>
+        <div class="role-toggle" id="tripTypeToggle">
+          <div class="opt on" onclick="setTripType('rental', this)">Rental</div>
+          <div class="opt" onclick="setTripType('town', this)">Town Trip</div>
+          <div class="opt" onclick="setTripType('lease', this)">Lease</div>
+        </div>
+
+        <div id="rentalMode">
+          <div class="section-label">Select dates</div>
+          <div class="calendar">
+            <div class="cal-day">M</div><div class="cal-day">T</div><div class="cal-day">W</div><div class="cal-day">T</div><div class="cal-day">F</div><div class="cal-day">S</div><div class="cal-day">S</div>
+            <div class="cal-day">1</div><div class="cal-day avail">2</div><div class="cal-day sel">3</div><div class="cal-day sel">4</div><div class="cal-day avail">5</div><div class="cal-day">6</div><div class="cal-day">7</div>
+          </div>
+          <div class="section-label">Price breakdown</div>
+          <div class="card">
+            <div class="price-line"><span>2 days × D4,000</span><span>D8,000</span></div>
+            <div class="price-line"><span>Service fee</span><span>D630</span></div>
+            <div class="price-line total"><span>Total</span><span>D8,600</span></div>
+          </div>
+        </div>
+
+        <div id="townMode" style="display:none;">
+          <div class="section-label">Pickup & drop-off</div>
+          <div class="card">
+            <div class="row"><span class="k">Pickup</span><span class="v">Senegambia Strip</span></div>
+            <div class="row"><span class="k">Drop-off</span><span class="v">Kairaba Avenue</span></div>
+            <div class="row"><span class="k">Est. distance</span><span class="v">3.2 km · 11 min</span></div>
+          </div>
+          <div class="section-label">Price breakdown</div>
+          <div class="card">
+            <div class="price-line"><span>Town trip fare</span><span>D600</span></div>
+            <div class="price-line"><span>Service fee</span><span>D50</span></div>
+            <div class="price-line total"><span>Total</span><span>D650</span></div>
+          </div>
+        </div>
+
+        <div id="leaseMode" style="display:none;">
+          <div class="section-label">Lease term</div>
+          <div class="card">
+            <div class="row"><span class="k">Minimum term</span><span class="v">6 months</span></div>
+            <div class="row"><span class="k">Monthly rate</span><span class="v">D65,000/mo</span></div>
+            <div class="row"><span class="k">Deposit</span><span class="v">D65,000</span></div>
+          </div>
+          <div style="font-size:10px; color:var(--steel); margin:-2px 0 12px; line-height:1.5;">Leases are offered by rental companies for extended use, priced lower per day than a short rental but requiring a signed term commitment.</div>
+        </div>
+
+        <div class="section-label">Pay with</div>
+        <div class="paymethod sel"><div class="micon2">📱</div><div><div class="mname">QMoney (QCell)</div><div class="msub">•••• 2290</div></div><span class="momo-tag">Mobile Money</span></div>
+        <div class="action-row"><div class="btn primary">Confirm Booking</div></div>
+      </div>
+
+      <!-- BOOKING CONFIRMED -->
+      <div class="screen" id="confirmed">
+        <div class="app-header"><div><div class="eyebrow">Booking #BK-1042</div><h1>Confirmed ✓</h1></div></div>
+        <div class="vin-plate">
+          <span class="status-chip ok">Confirmed</span>
+          <div class="make-model">2022 Honda CR-V EX-L</div>
+          <div class="meta-row"><div><b>Aug 3–4</b>Dates</div><div><b>D8,600</b>Total paid</div></div>
+          <div class="vin-row"><span>Pickup: Kombo St, Bakau</span><span>Directions →</span></div>
+        </div>
+        <div class="section-label">What's next</div>
+        <div class="timeline-item"><div class="dot2"></div><div class="body"><div class="title">Owner will confirm pickup time</div><div class="sub">Usually within 2 hours</div></div></div>
+        <div class="timeline-item"><div class="dot2"></div><div class="body"><div class="title">Vehicle condition check-in</div><div class="sub">At pickup, photos on both sides</div></div></div>
+        <div class="timeline-item"><div class="dot2"></div><div class="body"><div class="title">Return by 6pm, Aug 4</div><div class="sub">Same location</div></div></div>
+        <div class="action-row"><div class="btn ghost">Message Owner</div><div class="btn primary">View Booking</div></div>
+      </div>
+
+      <!-- DRIVER: INCOMING RIDE REQUEST -->
+      <div class="screen" id="riderequest">
+        <div class="app-header"><div><div class="eyebrow">Driver mode · Online</div><h1>New Ride Request</h1></div></div>
+        <div class="ride-alert">
+          <div class="rfare">D600</div>
+          <div class="rmeta">3.2 km trip · Est. 11 min</div>
+          <div class="countdown-ring">9s</div>
+        </div>
+        <div class="card">
+          <div class="row"><span class="k">Pickup</span><span class="v">Senegambia Strip</span></div>
+          <div class="row"><span class="k">Drop-off</span><span class="v">Kairaba Avenue</span></div>
+          <div class="row"><span class="k">Rider rating</span><span class="v">4.8 ★</span></div>
+        </div>
+        <div class="action-row"><div class="btn ghost">Decline</div><div class="btn primary">Accept Ride</div></div>
+      </div>
+
+      <!-- DRIVER: TRIP IN PROGRESS -->
+      <div class="screen" id="tripprogress">
+        <div class="app-header"><div><div class="eyebrow">Trip #RD-8834</div><h1>En Route to Drop-off</h1></div></div>
+        <div class="track-map">
+          <div class="track-route"></div>
+          <div class="track-dot" style="top:48%; left:52%;"></div>
+        </div>
+        <div class="trip-progress">
+          <div class="tp-dot"></div><div class="tp-line"></div><div class="tp-dot"></div><div class="tp-line" style="background:#DAD6C9;"></div><div class="tp-dot end"></div>
+        </div>
+        <div class="card">
+          <div class="row"><span class="k">Rider</span><span class="v">F. Sanyang</span></div>
+          <div class="row"><span class="k">Drop-off</span><span class="v">Kairaba Avenue</span></div>
+          <div class="row"><span class="k">ETA</span><span class="v">6 min</span></div>
+          <div class="row"><span class="k">Fare</span><span class="v">D600</span></div>
+        </div>
+        <div class="action-row"><div class="btn ghost">Message Rider</div><div class="btn primary">Complete Trip</div></div>
+      </div>
+
+      <!-- DRIVER: TRIP COMPLETE / EARNINGS -->
+      <div class="screen" id="tripearnings">
+        <div class="app-header"><div><div class="eyebrow">Trip #RD-8834</div><h1>Trip Complete</h1></div></div>
+        <div class="earnings-hero"><div class="enum">+D558</div><div class="elbl">Your earnings (after 7% fee)</div></div>
+        <div class="card">
+          <div class="row"><span class="k">Fare</span><span class="v">D600</span></div>
+          <div class="row"><span class="k">Platform fee</span><span class="v">-D42</span></div>
+          <div class="row"><span class="k">Paid via</span><span class="v">Afrimoney</span></div>
+        </div>
+        <div class="stat-strip">
+          <div class="stat"><div class="num">14</div><div class="lbl">Trips Today</div></div>
+          <div class="stat"><div class="num">D4,270</div><div class="lbl">Today's Total</div></div>
+        </div>
+        <div class="action-row"><div class="btn ghost">Rate Rider</div><div class="btn primary">Go Online for Next</div></div>
+      </div>
+
+      <!-- BROWSE LISTINGS (Vehicle Sales) -->
+      <div class="screen" id="browselistings">
+        <div class="app-header"><div><div class="eyebrow">Vehicle Sales Marketplace</div><h1>Browse Listings</h1></div></div>
+        <div class="role-toggle">
+          <div class="opt on">All</div>
+          <div class="opt">Dealer</div>
+          <div class="opt">Private</div>
+          <div class="opt">Auction</div>
+        </div>
+        <div class="vin-plate">
+          <div class="vplate-thumb media-ph"><span class="micon">🚙</span><span class="mlabel">Toyota Land Cruiser Prado</span></div>
+          <span class="status-chip ok">Full history</span>
+          <div class="make-model">2019 Toyota Land Cruiser Prado TX</div>
+          <div class="meta-row"><div><b>D2,100,000</b>Asking price</div><div><b>Private seller</b>Source</div></div>
+          <div class="vin-row"><span>41,205 mi · Serrekunda</span><span>Passport →</span></div>
+        </div>
+        <div class="vin-plate">
+          <div class="vplate-thumb media-ph"><span class="micon">🚙</span><span class="mlabel">Honda CR-V</span></div>
+          <span class="status-chip ok">Full history</span>
+          <div class="make-model">2021 Honda CR-V EX-L</div>
+          <div class="meta-row"><div><b>D1,850,000</b>Asking price</div><div><b>Kombo Motors (Dealer)</b>Source</div></div>
+          <div class="vin-row"><span>18,300 mi · Kanifing</span><span>Passport →</span></div>
+        </div>
+        <div class="vin-plate">
+          <div class="vplate-thumb media-ph"><span class="micon">🚚</span><span class="mlabel">Isuzu NPR</span></div>
+          <span class="status-chip due">Auction — bidding open</span>
+          <div class="make-model">2016 Isuzu NPR Truck</div>
+          <div class="meta-row"><div><b>D890,000</b>Current bid</div><div><b>Ends in 2 days</b>Auction</div></div>
+          <div class="vin-row"><span>Fleet disposal · Banjul</span><span>Passport →</span></div>
+        </div>
+        <div class="action-row"><div class="btn primary">Filter Results</div></div>
+      </div>
+
+      <!-- LIST MY VEHICLE (private seller) -->
+      <div class="screen" id="listvehicle">
+        <div class="app-header"><div><div class="eyebrow">Vehicle Sales Marketplace</div><h1>List My Vehicle</h1></div></div>
+        <div class="vin-plate">
+          <div class="make-model">2019 Toyota Land Cruiser Prado TX</div>
+          <div class="meta-row"><div><b>41,205 mi</b>Mileage</div><div><b>Full passport</b>History</div></div>
+          <div class="vin-row"><span>VIN JTMHY7AJ...4X2091</span><span>Auto-filled →</span></div>
+        </div>
+        <div class="field"><label>Asking price (GMD)</label><input type="text" placeholder="e.g. 2,100,000"></div>
+        <div class="field"><label>Reason for selling (optional)</label><input type="text" placeholder="Upgrading, relocating, etc."></div>
+        <div class="scan-box">📷 Add photos — listings with a verified passport and clear photos sell faster</div>
+        <div class="cover-badge">✓ Your service history and mileage log carry over automatically</div>
+        <div class="action-row"><div class="btn primary">Publish Listing</div></div>
+      </div>
+
+      <!-- DEALER INVENTORY -->
+      <div class="screen" id="dealerinventory">
+        <div class="app-header"><div><div class="eyebrow">Dealership Account</div><h1>Kombo Motors Inventory</h1></div></div>
+        <div class="stat-strip">
+          <div class="stat"><div class="num">14</div><div class="lbl">Listed</div></div>
+          <div class="stat"><div class="num">3</div><div class="lbl">Pending Sale</div></div>
+          <div class="stat"><div class="num">D26.4M</div><div class="lbl">Inventory Value</div></div>
+        </div>
+        <div class="section-label">Inventory</div>
+        <div class="flist">
+          <div class="frow"><div><div class="name">2021 Honda CR-V EX-L</div><div class="driver">D1,850,000 · Listed 4 days</div></div><div class="flag" style="background:var(--good-bg); color:#2E5F38;">Live</div></div>
+          <div class="frow"><div><div class="name">2020 Toyota RAV4</div><div class="driver">D1,600,000 · Listed 9 days</div></div><div class="flag" style="background:var(--warn-bg); color:var(--warn-fg);">Offer pending</div></div>
+          <div class="frow"><div><div class="name">2018 Nissan X-Trail</div><div class="driver">D1,150,000 · Listed 2 days</div></div><div class="flag" style="background:var(--good-bg); color:#2E5F38;">Live</div></div>
+        </div>
+        <div class="action-row"><div class="btn primary">Add Vehicle to Inventory</div></div>
+      </div>
+
+      <!-- COMPARE INSURERS (broker) -->
+      <div class="screen" id="compareinsurers">
+        <div class="app-header"><div><div class="eyebrow">Insurance & Protection</div><h1>Compare Insurers</h1></div></div>
+        <div class="quote">
+          <div class="top"><span class="shop">IGI Gamstar</span><span class="price">D2,400/mo</span></div>
+          <div class="meta">Comprehensive · fast claims reputation</div>
+        </div>
+        <div class="quote">
+          <div class="top"><span class="shop">GNIC</span><span class="price">D2,150/mo</span></div>
+          <div class="meta">Comprehensive · nationwide branches</div>
+        </div>
+        <div class="quote">
+          <div class="top"><span class="shop">Capital Express Assurance</span><span class="price">D1,980/mo</span></div>
+          <div class="meta">Third-party plus · budget option</div>
+        </div>
+        <div style="font-size:10px; color:var(--steel); margin:2px 0 0; line-height:1.5;">Quotes pulled through a licensed broker partner: you choose, we don't push one insurer over another.</div>
+        <div class="action-row"><div class="btn primary">Select & Continue</div></div>
+      </div>
+
+      <!-- CAR CULTURE FEED -->
+      <div class="screen" id="culture">
+        <div class="app-header"><div><div class="eyebrow">Street Code</div><h1>Feed</h1></div><div class="avatar"></div></div>
+        <div class="event-strip">
+          <div class="event-card"><div class="edate">Sat, Aug 2</div><div class="ename">Cars & Coffee Banjul</div><div class="eloc">Senegambia · 8am</div></div>
+          <div class="event-card"><div class="edate">Sun, Aug 17</div><div class="ename">Kombo Track Day</div><div class="eloc">Kombo Circuit</div></div>
+          <div class="event-card"><div class="edate">Sat, Sep 6</div><div class="ename">Classic Showcase</div><div class="eloc">Bakau · 10am</div></div>
+        </div>
+        <div class="post">
+          <div class="phead"><div class="pavatar"></div><div><div class="pname">A. Jallow</div><div class="psub">'71 Land Cruiser FJ40 · restoration</div></div></div>
+          <div class="pimg media-ph video"><span class="micon">🚙</span><span class="mlabel">FJ40 · Suspension Rebuild</span></div>
+          <div class="pcaption">Week 6 of the FJ40 restoration — new suspension bushings finally in. Bodywork next.</div>
+          <div class="pfoot"><span>♥ 84</span><span>💬 12</span><span>Log →</span></div>
+        </div>
+        <div class="news-card">
+          <span class="news-cat recall">Recall</span>
+          <div class="news-title">Toyota expands airbag inflator recall to 2018–2020 models</div>
+          <div class="news-sub">Check if your VIN is affected — 2 min read</div>
+        </div>
+        <div class="post">
+          <div class="phead"><div class="pavatar"></div><div><div class="pname">M. Ceesay</div><div class="psub">Corolla AE86 · build</div></div></div>
+          <div class="pimg media-ph"><span class="micon">🏎️</span><span class="mlabel">AE86 · Dyno Day</span></div>
+          <div class="pcaption">Dyno day. 118whp — modest, but she's light. Full build log linked to VIN record.</div>
+          <div class="pfoot"><span>♥ 51</span><span>💬 7</span><span>Log →</span></div>
+        </div>
+        <div class="news-card">
+          <span class="news-cat tips">Tips</span>
+          <div class="news-title">Rainy season is coming — 5 checks before you need them</div>
+          <div class="news-sub">Street Code Editorial · 6 hrs ago</div>
+        </div>
+        <div class="news-card">
+          <span class="news-cat industry">Industry</span>
+          <div class="news-title">Fuel prices expected to shift after regional supply update</div>
+          <div class="news-sub">1 day ago</div>
+        </div>
+        <div class="action-row"><div class="btn primary">Share a Build</div></div>
+      </div>
+
+      <!-- MY COLLECTION -->
+      <div class="screen" id="collection">
+        <div class="app-header"><div><div class="eyebrow">Personal Collection</div><h1>My Collection</h1></div></div>
+        <div class="stat-strip">
+          <div class="stat"><div class="num">3</div><div class="lbl">Cars</div></div>
+          <div class="stat"><div class="num">D4.3M</div><div class="lbl">Est. Value</div></div>
+          <div class="stat"><div class="num">+8%</div><div class="lbl">1yr Change</div></div>
+        </div>
+
+        <div class="section-label">Garage worth breakdown</div>
+        <div class="card">
+          <div class="worth-bar-row">
+            <div class="wtop"><span>FJ40 Restoration</span><b>D2,000,000 · 47%</b></div>
+            <div class="worth-track"><div class="worth-fill" style="width:47%;"></div></div>
+          </div>
+          <div class="worth-bar-row">
+            <div class="wtop"><span>Corolla AE86</span><b>D1,330,000 · 31%</b></div>
+            <div class="worth-track"><div class="worth-fill" style="width:31%; background:var(--amber);"></div></div>
+          </div>
+          <div class="worth-bar-row" style="margin-bottom:0;">
+            <div class="wtop"><span>Land Cruiser Prado</span><b>D945,000 · 22%</b></div>
+            <div class="worth-track"><div class="worth-fill" style="width:22%; background:var(--steel);"></div></div>
+          </div>
+        </div>
+
+        <div class="section-label">Collection</div>
+        <div class="vin-plate">
+          <div class="vplate-thumb media-ph"><span class="micon">🚙</span><span class="mlabel">Land Cruiser FJ40</span></div>
+          <div class="make-model">1971 Toyota Land Cruiser FJ40</div>
+          <div class="meta-row"><div><b>D2,000,000</b>Est. value</div><div><b>Restoring</b>Status</div></div>
+          <div class="vin-row"><span>Build log · 6 entries</span><span>Open →</span></div>
+        </div>
+        <div class="vin-plate">
+          <div class="vplate-thumb media-ph"><span class="micon">🏎️</span><span class="mlabel">Corolla AE86</span></div>
+          <div class="make-model">1986 Toyota Corolla AE86</div>
+          <div class="meta-row"><div><b>D1,330,000</b>Est. value</div><div><b>Track-ready</b>Status</div></div>
+          <div class="vin-row"><span>Build log · 14 entries</span><span>Open →</span></div>
+        </div>
+        <div class="vin-plate">
+          <div class="vplate-thumb media-ph"><span class="micon">🚙</span><span class="mlabel">Land Cruiser Prado</span></div>
+          <div class="make-model">2019 Toyota Land Cruiser Prado</div>
+          <div class="meta-row"><div><b>D945,000</b>Est. value</div><div><b>Daily driver</b>Status</div></div>
+          <div class="vin-row"><span>Service log · 9 entries</span><span>Open →</span></div>
+        </div>
+        <div class="action-row"><div class="btn ghost">Add to Collection</div><div class="btn primary">Provenance Vault</div></div>
+      </div>
+
+      <!-- COLLECTION PROFILE (PUBLIC) -->
+      <div class="screen" id="pubprofile">
+        <div class="cover-media media-ph video"><span class="micon">🎬</span><span class="mlabel">Cover reel · FJ40 walkaround</span></div>
+        <div class="profile-head">
+          <div class="pavatar-lg">🏆</div>
+        </div>
+        <div style="font-size:17px; font-weight:800;">Kaabu's Garage</div>
+        <div style="font-size:11px; color:var(--steel);">Banjul · Collector since 2019 · 3 builds</div>
+        <div class="profile-stats">
+          <div class="pstat"><span class="n">3</span><span class="l">Vehicles</span></div>
+          <div class="pstat"><span class="n">1.2k</span><span class="l">Followers</span></div>
+          <div class="pstat"><span class="n">41</span><span class="l">Posts</span></div>
+          <div class="pstat"><span class="n">D4.3M</span><span class="l">Collection</span></div>
+        </div>
+        <div class="role-toggle"><div class="opt on">Photos</div><div class="opt">Videos</div><div class="opt">Build Logs</div></div>
+        <div class="media-grid">
+          <div class="media-ph"><span class="micon">🚙</span></div>
+          <div class="media-ph video"><span class="micon">🚙</span></div>
+          <div class="media-ph"><span class="micon">🛞</span></div>
+          <div class="media-ph video"><span class="micon">🏎️</span></div>
+          <div class="media-ph"><span class="micon">🏎️</span></div>
+          <div class="media-ph"><span class="micon">🔧</span></div>
+          <div class="media-ph"><span class="micon">🚙</span></div>
+          <div class="media-ph video"><span class="micon">🏎️</span></div>
+          <div class="media-ph"><span class="micon">📸</span></div>
+        </div>
+        <div class="action-row"><div class="btn ghost">Follow</div><div class="btn primary">Upload Photo/Video</div></div>
+      </div>
+
+      <!-- EVENT DETAIL -->
+      <div class="screen" id="event">
+        <div class="app-header"><div><div class="eyebrow">Car Culture · Event</div><h1>Cars & Coffee Banjul</h1></div></div>
+        <div class="post" style="margin-bottom:14px;"><div class="pimg media-ph"><span class="micon">📸</span><span class="mlabel">Cars & Coffee Banjul</span></div></div>
+        <div class="card">
+          <div class="row"><span class="k">Date</span><span class="v">Sat, Aug 2 · 8:00 AM</span></div>
+          <div class="row"><span class="k">Location</span><span class="v">Senegambia Strip</span></div>
+          <div class="row"><span class="k">Hosted by</span><span class="v">Banjul Car Club</span></div>
+          <div class="row"><span class="k">Going</span><span class="v">62 people</span></div>
+        </div>
+        <div class="section-label">About</div>
+        <div class="card"><div style="font-size:12px; line-height:1.5;">Monthly meet for classics, JDM builds, and daily drivers. Coffee sponsored by Kombo Parts Depot — bring your build log, best-in-show gets a service voucher.</div></div>
+        <div class="action-row"><div class="btn ghost">Share</div><div class="btn primary">I'm Going</div></div>
+      </div>
+
+      <!-- NOTIFICATIONS -->
+      <div class="screen" id="notifications">
+        <div class="app-header"><div><div class="eyebrow">Account</div><h1>Notifications</h1></div></div>
+        <div class="notif"><div class="nicon">🔧</div><div><div class="ntitle">Timbooba Motors marked your job complete</div><div class="nsub">Land Cruiser · Job #2291</div></div><div class="ntime">2h</div></div>
+        <div class="notif"><div class="nicon">⚠</div><div><div class="ntitle">Van 11 insurance expires in 3 days</div><div class="nsub">Fleet compliance alert</div></div><div class="ntime">5h</div></div>
+        <div class="notif"><div class="nicon">💬</div><div><div class="ntitle">New message from Timbooba Motors</div><div class="nsub">"On it. Should be done by 4pm…"</div></div><div class="ntime">6h</div></div>
+        <div class="notif"><div class="nicon">♥</div><div><div class="ntitle">A. Jallow liked your build post</div><div class="nsub">Corolla AE86 dyno day</div></div><div class="ntime">1d</div></div>
+        <div class="notif"><div class="nicon">📦</div><div><div class="ntitle">Parts order shipped</div><div class="nsub">Kombo Parts Depot · arriving in 2 days</div></div><div class="ntime">1d</div></div>
+      </div>
+
+      <!-- PAYMENTS & PAYOUTS -->
+      <div class="screen" id="payments">
+        <div class="app-header"><div><div class="eyebrow">Account</div><h1>Payments</h1></div></div>
+        <div class="paycard">
+          <div class="pcrow"><span>Balance</span><span>Platform Wallet</span></div>
+          <div class="pcnum">D28,875</div>
+          <div class="pcrow"><span>Next payout</span><span>Fri, Jul 24</span></div>
+        </div>
+        <div class="section-label">Recent activity</div>
+        <div class="payout-row"><span>Job #2291 payout</span><span class="pos">+D9,500</span></div>
+        <div class="payout-row"><span>Parts order — Kombo Parts Depot</span><span>-D6,020</span></div>
+        <div class="payout-row"><span>CR-V booking payout</span><span class="pos">+D8,120</span></div>
+        <div class="payout-row"><span>Platform fee (7%)</span><span>-D610</span></div>
+        <div class="section-label">Withdraw to</div>
+        <div class="paymethod sel"><div class="micon2">📱</div><div><div class="mname">Afrimoney (Africell)</div><div class="msub">Instant · no fee</div></div><span class="momo-tag">Fastest</span></div>
+        <div class="action-row"><div class="btn ghost">Payment Methods</div><div class="btn primary">Withdraw</div></div>
+      </div>
+
+      <!-- ADMIN: VERIFICATION QUEUE -->
+      <div class="screen" id="adminqueue">
+        <div class="app-header"><div><div class="eyebrow">Platform Admin</div><h1>Verification Queue</h1></div></div>
+        <div class="stat-strip">
+          <div class="stat"><div class="num">7</div><div class="lbl">Pending</div></div>
+          <div class="stat"><div class="num">142</div><div class="lbl">Verified</div></div>
+          <div class="stat"><div class="num">3</div><div class="lbl">Flagged</div></div>
+        </div>
+        <div class="section-label">Pending review</div>
+        <div class="queue-row">
+          <div class="qtop"><span class="qname">Serrekunda Auto Parts</span><span class="qtype">Supplier</span></div>
+          <div class="dsub" style="font-size:10px; color:var(--steel);">License uploaded · Submitted 4 hrs ago</div>
+          <div class="qactions"><div class="btn ghost">Review Docs</div><div class="btn primary">Approve</div></div>
+        </div>
+        <div class="queue-row">
+          <div class="qtop"><span class="qname">B. Sanneh</span><span class="qtype">Independent Mechanic</span></div>
+          <div class="dsub" style="font-size:10px; color:var(--steel);">ID uploaded · Submitted 1 day ago</div>
+          <div class="qactions"><div class="btn ghost">Review Docs</div><div class="btn primary">Approve</div></div>
+        </div>
+        <div class="queue-row">
+          <div class="qtop"><span class="qname">GreenLine Rentals</span><span class="qtype">Mobility / Fleet</span></div>
+          <div class="dsub" style="font-size:10px; color:var(--steel);">Missing insurance doc · 2 days ago</div>
+          <div class="qactions"><div class="btn ghost">Request Info</div><div class="btn primary">Approve</div></div>
+        </div>
+      </div>
+
+      <!-- ADMIN: DISPUTE RESOLUTION -->
+      <div class="screen" id="admindispute">
+        <div class="app-header"><div><div class="eyebrow">Platform Admin · Case #418</div><h1>Dispute Resolution</h1></div></div>
+        <div class="card">
+          <div class="row"><span class="k">Job</span><span class="v">#2288 — Suspension repair</span></div>
+          <div class="row"><span class="k">Amount held</span><span class="v">D14,700 (escrow)</span></div>
+          <div class="row"><span class="k">Filed by</span><span class="v">Customer</span></div>
+        </div>
+        <div class="section-label">Claim</div>
+        <div class="dispute-msg">Customer: "Shocks were quoted as new OEM, invoice shows aftermarket parts were installed instead."</div>
+        <div class="dispute-msg">Garage: "Customer approved a substitution over chat after OEM was out of stock — see thread."</div>
+        <div class="section-label">Evidence on file</div>
+        <div class="photo-strip">
+          <div class="ph media-ph"><span class="micon">🔩</span><span class="mlabel">Shock (installed)</span></div>
+          <div class="ph media-ph"><span class="micon">🧾</span><span class="mlabel">Invoice</span></div>
+          <div class="ph media-ph video"><span class="micon">💬</span><span class="mlabel">Chat approval</span></div>
+        </div>
+        <div class="action-row"><div class="btn ghost">View Full Chat Log</div></div>
+        <div class="action-row"><div class="btn ghost">Refund Customer</div><div class="btn primary">Release to Garage</div></div>
+      </div>
+
+      <!-- APPEALS & OVERRIDES -->
+      <div class="screen" id="appeals">
+        <div class="badge-authority">🛡 Role-Based · Fully Logged</div>
+        <div class="app-header"><div><div class="eyebrow">Platform Admin</div><h1>Appeals & Overrides</h1></div></div>
+        <div class="stat-strip">
+          <div class="stat"><div class="num">4</div><div class="lbl">Open Appeals</div></div>
+          <div class="stat"><div class="num">2.1</div><div class="lbl">Avg Days</div></div>
+        </div>
+        <div class="section-label">Pending</div>
+        <div class="appeal-card">
+          <div class="appeal-top"><span class="appeal-title">Wrongful parking violation — BJL 4471</span><span class="appeal-type">Violation</span></div>
+          <div class="appeal-meta">Filed by Kaabu Corp · 2 days ago · Officer #2210</div>
+          <div class="appeal-reason-box"><label>Appellant's reason</label>Was parked in a permitted zone — attaching photo of signage.</div>
+          <div class="action-row"><div class="btn ghost small" style="flex:none; padding:8px 14px;">Request More Info</div><div class="btn ghost small" style="flex:none; padding:8px 14px;">Deny</div><div class="btn primary small" style="flex:none; padding:8px 14px;">Uphold Appeal</div></div>
+        </div>
+        <div class="appeal-card">
+          <div class="appeal-top"><span class="appeal-title">License suspension review — M. Ceesay</span><span class="appeal-type">Suspension</span></div>
+          <div class="appeal-meta">Filed by driver · 5 days ago · Auto-flagged (unpaid fine)</div>
+          <div class="appeal-reason-box"><label>Appellant's reason</label>Fine was paid same day via Afrimoney — reference number attached.</div>
+          <div class="action-row"><div class="btn ghost small" style="flex:none; padding:8px 14px;">Request More Info</div><div class="btn ghost small" style="flex:none; padding:8px 14px;">Deny</div><div class="btn primary small" style="flex:none; padding:8px 14px;">Uphold Appeal</div></div>
+        </div>
+        <div style="font-size:10px; color:var(--steel); margin:2px 0 0; line-height:1.5;">Every decision here requires a reason and is written permanently to the Audit Log — visible to compliance review, never editable after the fact.</div>
+      </div>
+
+      <!-- AUDIT LOG -->
+      <div class="screen" id="auditlog">
+        <div class="badge-authority">🛡 Immutable Record</div>
+        <div class="app-header"><div><div class="eyebrow">Platform Admin</div><h1>Audit Log</h1></div></div>
+        <div class="filter-chip-row">
+          <div class="filter-chip on">All actions</div>
+          <div class="filter-chip">Appeals</div>
+          <div class="filter-chip">Verifications</div>
+          <div class="filter-chip">Disputes</div>
+        </div>
+        <div class="audit-entry">
+          <div class="atime">Today<br>10:42</div>
+          <div class="abody"><div class="aaction"><span class="aactor">Admin: F. Sanneh</span>Appeal upheld</div><div class="adetail">Violation BJL 4471 cleared — reason: "Signage confirmed permitted zone, photo verified against city zoning map."</div></div>
+        </div>
+        <div class="audit-entry">
+          <div class="atime">Today<br>09:15</div>
+          <div class="abody"><div class="aaction"><span class="aactor">System</span>Appeal filed</div><div class="adetail">M. Ceesay contested license suspension — routed to review queue.</div></div>
+        </div>
+        <div class="audit-entry">
+          <div class="atime">Yesterday<br>16:30</div>
+          <div class="abody"><div class="aaction"><span class="aactor">Admin: F. Sanneh</span>Garage verification approved</div><div class="adetail">Serrekunda Auto Parts — documents reviewed, license confirmed valid.</div></div>
+        </div>
+        <div class="audit-entry">
+          <div class="atime">Yesterday<br>14:02</div>
+          <div class="abody"><div class="aaction"><span class="aactor">Admin: A. Bojang</span>Dispute resolved</div><div class="adetail">Job #2288 — released D14,700 to garage, reason: "Chat log confirms customer approved substitution."</div></div>
+        </div>
+        <div class="audit-entry">
+          <div class="atime">2 days ago<br>08:51</div>
+          <div class="abody"><div class="aaction"><span class="aactor">System</span>License auto-suspended</div><div class="adetail">M. Ceesay — unpaid violation past 30-day window, nationwide flag applied.</div></div>
+        </div>
+        <div style="font-size:10px; color:var(--steel); margin-top:4px; line-height:1.5;">Entries cannot be edited or deleted by any role, including platform operators. This is the record that makes overrides defensible.</div>
+      </div>
+
+      <!-- POLICE: PLATE / VIN LOOKUP -->
+      <div class="screen" id="policelookup">
+        <div class="badge-authority">🛡 Law Enforcement Access</div>
+        <div class="app-header"><div><div class="eyebrow">Authorized lookup only</div><h1>Plate / VIN Lookup</h1></div></div>
+        <div class="field"><input type="text" placeholder="Enter plate number or VIN"></div>
+        <div class="vin-plate">
+          <span class="status-chip ok">Clean record</span>
+          <div class="make-model">2019 Toyota Land Cruiser Prado TX</div>
+          <div class="meta-row"><div><b>BJL 4471</b>Plate</div><div><b>Kaabu Corp</b>Registered owner</div></div>
+          <div class="vin-row"><span>JTMHY7AJXK4X2091</span><span>Full record →</span></div>
+        </div>
+        <div class="verify-check"><div class="vmark pass">✓</div>Registration current</div>
+        <div class="verify-check"><div class="vmark pass">✓</div>Insurance active</div>
+        <div class="verify-check"><div class="vmark pass">✓</div>Not reported stolen</div>
+        <div class="verify-check"><div class="vmark pass">✓</div>Road tax current (GRA)</div>
+        <div class="verify-check"><div class="vmark pass">✓</div>No outstanding violations on file</div>
+        <div class="action-row"><div class="btn ghost">Log This Check</div><div class="btn primary">Flag Vehicle</div></div>
+      </div>
+
+      <!-- NATIONWIDE STOLEN VEHICLE ALERTS -->
+      <div class="screen" id="stolenalerts">
+        <div class="badge-authority">🛡 Broadcast Nationwide</div>
+        <div class="app-header"><div><div class="eyebrow">Law Enforcement Access</div><h1>Stolen Vehicle Alerts</h1></div></div>
+        <div class="stat-strip">
+          <div class="stat"><div class="num">6</div><div class="lbl">Active</div></div>
+          <div class="stat"><div class="num">2</div><div class="lbl">Recovered (7d)</div></div>
+        </div>
+        <div class="section-label">Active alerts</div>
+        <div class="queue-row">
+          <div class="qtop"><span class="qname">Toyota Land Cruiser — BJL 4471</span><span class="qtype">Reported 2h ago</span></div>
+          <div class="dsub" style="font-size:10px; color:var(--steel);">Last seen: Senegambia Strip, Kololi · Owner: Kaabu Corp</div>
+          <div class="qactions"><div class="btn ghost">View Passport</div><div class="btn primary">Mark Recovered</div></div>
+        </div>
+        <div class="queue-row">
+          <div class="qtop"><span class="qname">Honda CR-V — BJL 9013</span><span class="qtype">Reported 1d ago</span></div>
+          <div class="dsub" style="font-size:10px; color:var(--steel);">Last seen: Serrekunda Market · Owner: F. Sanyang</div>
+          <div class="qactions"><div class="btn ghost">View Passport</div><div class="btn primary">Mark Recovered</div></div>
+        </div>
+        <div class="queue-row">
+          <div class="qtop"><span class="qname">Yamaha motorbike — no plate on file</span><span class="qtype">Reported 3d ago</span></div>
+          <div class="dsub" style="font-size:10px; color:var(--steel);">Last seen: Bakau Newtown · Owner: M. Ceesay</div>
+          <div class="qactions"><div class="btn ghost">View Passport</div><div class="btn primary">Mark Recovered</div></div>
+        </div>
+        <div style="font-size:10px; color:var(--steel); margin-top:2px; line-height:1.5;">Every alert here is visible to any officer performing a Plate / VIN Lookup or Roadside Verification check nationwide, the moment it's filed.</div>
+      </div>
+
+      <!-- POLICE: ROADSIDE VERIFICATION -->
+      <div class="screen" id="roadside">
+        <div class="badge-authority">🛡 Roadside Check</div>
+        <div class="app-header"><div><div class="eyebrow">Scanned passport · Instant result</div><h1>Verification</h1></div></div>
+        <div class="vin-plate" style="margin-bottom:16px;">
+          <div class="make-model">Toyota Land Cruiser Prado TX</div>
+          <div class="meta-row"><div><b>BJL 4471</b>Plate</div><div><b>2019</b>Year</div></div>
+        </div>
+        <div class="verify-check"><div class="vmark pass">✓</div>Driver matches registered/authorized user</div>
+        <div class="verify-check"><div class="vmark pass">✓</div>Valid insurance shown</div>
+        <div class="verify-check"><div class="vmark pass">✓</div>No flags on record</div>
+        <div class="card" style="margin-top:14px;"><div class="row"><span class="k">Checked by</span><span class="v">Officer #2210</span></div><div class="row"><span class="k">Time</span><span class="v">Just now</span></div></div>
+        <div class="action-row"><div class="btn primary">Clear — All Good</div></div>
+        <div class="section-label">If a further search is needed</div>
+        <div class="card">
+          <div class="row"><span class="k">Search type must be specified</span><span class="v">Random / Probable cause / Other</span></div>
+          <div class="row"><span class="k">Driver is notified</span><span class="v">Before search begins</span></div>
+        </div>
+        <div class="action-row"><div class="btn ghost">Specify & Notify Driver</div></div>
+      </div>
+
+      <!-- VIOLATION RESOLUTION -->
+      <div class="screen" id="violation">
+        <div class="badge-authority">🛡 Violation Recorded</div>
+        <div class="app-header"><div><div class="eyebrow">Plate BJL 4471 · Parking</div><h1>Resolve Violation</h1></div></div>
+        <div class="card">
+          <div class="row"><span class="k">Issued by</span><span class="v">Officer #2210 (remote scan)</span></div>
+          <div class="row"><span class="k">Violation</span><span class="v">No-parking zone, Kairaba Ave</span></div>
+          <div class="row"><span class="k">Recorded</span><span class="v">Today, 2:14 PM</span></div>
+        </div>
+        <div class="section-label">Choose a resolution</div>
+        <div class="role-card sel"><div class="ricon">💳</div><div><div class="rname">Pay Fine</div><div class="rsub">D1,750 · via Mobile Money or card</div></div></div>
+        <div class="role-card"><div class="ricon">🎓</div><div><div class="rname">Complete In-App Course</div><div class="rsub">Short refresher module — no fine if completed in 7 days</div></div></div>
+        <div style="font-size:10px; color:var(--steel); margin:-2px 0 12px; line-height:1.5;">Unresolved violations after 30 days may lead to license suspension, visible nationwide to any officer performing a check.</div>
+        <div class="action-row"><div class="btn primary">Continue</div></div>
+      </div>
+
+      <!-- PAYMENT METHODS -->
+      <div class="screen" id="paymethods">
+        <div class="app-header"><div><div class="eyebrow">Account</div><h1>Payment Methods</h1></div></div>
+        <div class="section-label">Mobile money</div>
+        <div class="paymethod sel"><div class="micon2">📱</div><div><div class="mname">Afrimoney (Africell)</div><div class="msub">•••• 6621 · Default</div></div><span class="momo-tag">Verified</span></div>
+        <div class="paymethod"><div class="micon2">📱</div><div><div class="mname">QMoney (QCell)</div><div class="msub">•••• 2290</div></div></div>
+        <div class="paymethod"><div class="micon2">📱</div><div><div class="mname">GMoney (GTBank)</div><div class="msub">Not linked</div></div></div>
+        <div class="section-label">Cards</div>
+        <div class="paymethod"><div class="micon2">💳</div><div><div class="mname">Visa •••• 4471</div><div class="msub">Expires 09/28</div></div></div>
+        <div class="action-row"><div class="btn ghost">Add Card</div><div class="btn primary">Link Mobile Money</div></div>
+      </div>
+
+      <!-- SETTINGS -->
+      <div class="screen" id="settings">
+        <div class="app-header"><div><div class="eyebrow">Account</div><h1>Settings</h1></div><div class="avatar"></div></div>
+        <div class="section-label">Profile</div>
+        <div class="card">
+          <div class="row"><span class="k">Name</span><span class="v">Kaabu Corp</span></div>
+          <div class="row"><span class="k">Account type</span><span class="v">Owner + Collector</span></div>
+          <div class="row"><span class="k">Language</span><span class="v">English</span></div>
+        </div>
+        <div class="section-label">Currency</div>
+        <div class="role-toggle"><div class="opt on">GMD</div><div class="opt">USD</div><div class="opt">EUR</div><div class="opt">GBP</div></div>
+        <div class="section-label">Privacy</div>
+        <div class="card">
+          <div class="row"><span class="k">Public collection profile</span><span class="v">On</span></div>
+          <div class="row"><span class="k">Show vehicle passport publicly</span><span class="v">On</span></div>
+        </div>
+        <div class="section-label">Pulse — live vehicle data</div>
+        <div class="card">
+          <div class="row"><span class="k">Share live location/performance</span><span class="v">Off</span></div>
+          <div class="row"><span class="k">Monetize my driving data</span><span class="v">Off</span></div>
+        </div>
+        <div style="font-size:10px; color:var(--steel); margin:-4px 0 12px; line-height:1.5;">Optional for individual owners. Never shared with anyone — including other users — unless you turn it on. Fleet vehicles owned by a tenant company may be required to enable this during work hours.</div>
+        <div class="action-row"><div class="btn ghost">Log Out</div></div>
+      </div>
+
+    </div>
+
+      <div class="deck-panel" id="deck-signup"><div class="deck-eyebrow">Get Started</div><div class="deck-title">What Brings You Here?</div><div class="deck-body"><p>Six account types share one sign-up flow: vehicle owner, collector, fleet company, garage or mechanic, parts supplier, and driver. Each unlocks a different set of tools, but all of them write to the same underlying vehicle and identity records.</p><p>This is a deliberate choice: rather than building six separate apps, Street Code is one platform with role-based views. A garage owner who also owns a personal car sees both worlds without switching accounts.</p></div></div>
+      <div class="deck-panel" id="deck-verify"><div class="deck-eyebrow">Get Started</div><div class="deck-title">Verify Your Business</div><div class="deck-body"><p>No garage, mechanic, or supplier goes live without a human reviewing their business license and owner ID first. This is the first checkpoint in a marketplace where strangers pay other strangers to work on their car.</p><p>Review typically takes under 48 hours. The goal is friction low enough that legitimate businesses don't bounce off the process, but real enough that verification actually means something to a customer choosing who to trust.</p></div></div>
+      <div class="deck-panel active" id="deck-garage"><div class="deck-eyebrow">Vehicle Backbone</div><div class="deck-title">My Garage</div><div class="deck-body"><p>The owner's home screen: every vehicle they have, current mileage, and whether anything's due. Two vehicles here (a Land Cruiser flagged for service, a CR-V that's current) is exactly the kind of at-a-glance status a paper logbook never gave anyone.</p><p>Quick actions sit right at the bottom: log mileage, request a job, add a vehicle, or jump into the personal collection view. Nothing here requires more than one tap to start.</p></div></div>
+      <div class="deck-panel" id="deck-garageempty"><div class="deck-eyebrow">Vehicle Backbone</div><div class="deck-title">My Garage, First Use</div><div class="deck-body"><p>A brand-new account with zero vehicles is the single most common first screen anyone will see. It has to explain the value of adding a vehicle without feeling like a wall.</p><p>The copy makes a specific promise: even a used car with no formal service history starts building one the day it's added, which matters most in a market where a lot of vehicle history simply isn't recorded anywhere else.</p></div></div>
+      <div class="deck-panel" id="deck-passport"><div class="deck-eyebrow">Vehicle Backbone</div><div class="deck-title">Vehicle Passport</div><div class="deck-body"><p>This is the public, shareable page for one vehicle, ownership history and every logged service event, plus mileage. It's the artifact a buyer checks before purchase, or a garage checks before quoting a job.</p><p>Every entry on this page was generated as a byproduct of normal platform use (a garage closing a job card, an owner logging mileage), not manually typed in after the fact. That's what makes it hard to fake.</p></div></div>
+      <div class="deck-panel" id="deck-reportstolen"><div class="deck-eyebrow">Vehicle Backbone</div><div class="deck-title">Report Stolen / Missing</div><div class="deck-body"><p>A report filed here doesn't sit in a queue somewhere, it broadcasts nationwide the moment it's submitted, visible to any officer running a Plate/VIN Lookup or Roadside check anywhere in the country.</p><p>This is the direct payoff of the Civic split: a consumer-side report instantly becomes law-enforcement-visible data, without the owner ever needing to know or care how that handoff works.</p></div></div>
+      <div class="deck-panel" id="deck-insurance"><div class="deck-eyebrow">Insurance & Protection</div><div class="deck-title">Vehicle Insurance</div><div class="deck-body"><p>Insurance status lives on the same record as everything else about the vehicle (provider, policy number, coverage type, and expiry) instead of a paper document that only exists in a glovebox.</p><p>The near-term version of this screen is a display layer over a real insurer's policy data. Getting there requires an actual underwriting partnership, the Insurance Partner Pitch document lays out exactly that conversation.</p></div></div>
+      <div class="deck-panel" id="deck-compareinsurers"><div class="deck-eyebrow">Insurance & Protection</div><div class="deck-title">Compare Insurers</div><div class="deck-body"><p>This is the broker function: multiple real insurers quoting the same vehicle side by side, instead of a single relationship with one provider deciding what an owner pays.</p><p>A broker partnership means Street Code never has to pick a side between insurers competing for the same customer, which is exactly the kind of neutral position that keeps a marketplace trustworthy on both ends.</p></div></div>
+      <div class="deck-panel" id="deck-protection"><div class="deck-eyebrow">Insurance & Protection</div><div class="deck-title">Marketplace Protection</div><div class="deck-body"><p>This is what makes it safe to pay a stranger through the app: funds sit in escrow and only release once the customer confirms a job or booking is actually done right. If it isn't, there's a claims path instead of a dead end.</p><p>This screen exists because trust is the actual product being sold in a two-sided marketplace, not the app itself. Nobody hands a mechanic they've never met money up front without something backing that decision.</p></div></div>
+      <div class="deck-panel" id="deck-claim"><div class="deck-eyebrow">Insurance & Protection</div><div class="deck-title">File a Claim</div><div class="deck-body"><p>A claim starts pre-filled with the booking or job it's tied to, no retyping vehicle details, dates, or who was involved. Photo upload and a short description are the only real inputs needed.</p><p>Average resolution time is a number worth being honest about early and then beating in practice, trust in a claims process is built by consistently fast, fair outcomes, not by the promise of them.</p></div></div>
+      <div class="deck-panel" id="deck-addvehicle"><div class="deck-eyebrow">Vehicle Backbone</div><div class="deck-title">Add a Vehicle</div><div class="deck-body"><p>Scan a VIN plate or windshield sticker and the make, model, year, trim, and engine decode automatically. Manual entry is the fallback, not the default, because the whole platform runs better when the VIN is right from day one.</p><p>This is the single most important screen in the product from a data standpoint: everything else (passport, insurance, fleet ops, mobility listings) depends on the vehicle record started here being accurate.</p></div></div>
+      <div class="deck-panel" id="deck-scantool"><div class="deck-eyebrow">Diagnostics & Tools</div><div class="deck-title">Connect Scan Tool</div><div class="deck-body"><p>Pairing a real OBD-II Bluetooth adapter turns self-reported mileage and vague symptom descriptions into live, verified data, odometer reading and engine status pulled directly from the vehicle, not typed in by a person.</p><p>This is optional hardware, not a requirement to use the platform. It exists for owners and garages who want a level of certainty that manual logging can't provide, especially on higher-value vehicles.</p></div></div>
+      <div class="deck-panel" id="deck-faultcodes"><div class="deck-eyebrow">Diagnostics & Tools</div><div class="deck-title">Fault Codes & Mileage</div><div class="deck-body"><p>A live scan surfaces actual diagnostic trouble codes, not a guess at what might be wrong, and flags severity so a P0301 misfire reads differently from a minor EVAP leak.</p><p>The natural next step from this screen is a single tap into Request a Job, with the fault codes already attached. A garage quoting against real codes instead of a phone description quotes faster and more accurately.</p></div></div>
+      <div class="deck-panel" id="deck-fleet"><div class="deck-eyebrow">Fleet & Driver Ops · Civic</div><div class="deck-title">Fleet Dashboard</div><div class="deck-body"><p>A company's entire fleet in one view, status, driver assignment, and monthly cost, replacing what's usually a spreadsheet three people maintain inconsistently.</p><p>Compliance alerts surface automatically: an expiring insurance policy or an overdue inspection shows up here before it becomes a problem on the road, not after.</p></div></div>
+      <div class="deck-panel" id="deck-staff"><div class="deck-eyebrow">Fleet & Driver Ops · Civic</div><div class="deck-title">Staff & Drivers</div><div class="deck-body"><p>Every driver, their license status, and what vehicle they're currently assigned to, in one list instead of a binder in someone's office drawer.</p><p>License expiry is flagged with enough lead time to actually renew before it lapses, the difference between a routine reminder and a vehicle pulled off the road mid-mission.</p></div></div>
+      <div class="deck-panel" id="deck-tracking"><div class="deck-eyebrow">Fleet & Driver Ops · Civic</div><div class="deck-title">Pulse, Live Tracking</div><div class="deck-body"><p>Pulse is the platform's live telemetry feature: route, speed, and status for a vehicle in real time, synced over Bluetooth from an OBD device. For tenant fleets, it's expected during working hours, for individual owners, it's off unless they turn it on.</p><p>Geofence alerts are the practical payoff for a fleet manager: a vehicle leaving its approved operating area shows up here immediately, not in an end-of-month report.</p></div></div>
+      <div class="deck-panel" id="deck-capacity"><div class="deck-eyebrow">Fleet & Driver Ops · Civic</div><div class="deck-title">Vehicle Capacity Board</div><div class="deck-body"><p>The question this screen answers directly: who has which vehicle right now, for what stated purpose, and who signed off on it. That's a question most fleets currently answer by asking around.</p><p>Every vehicle sits in exactly one state (available, on a mission, or in the shop) so there's no ambiguity about what's actually free to dispatch at any given moment.</p></div></div>
+      <div class="deck-panel" id="deck-dispatch"><div class="deck-eyebrow">Fleet & Driver Ops · Civic</div><div class="deck-title">Dispatch & Authorize</div><div class="deck-body"><p>Checking a vehicle out requires a named requester, a stated mission, and a named authorizer before it moves, a deliberately small amount of friction in exchange for a fleet that's never unaccounted for.</p><p>The stepper (Requested, Authorizing, Checked Out, Returned) makes the current state of any dispatch visible to anyone looking, not just the two people directly involved.</p></div></div>
+      <div class="deck-panel" id="deck-findgarage"><div class="deck-eyebrow">Garage Marketplace</div><div class="deck-title">Find a Garage</div><div class="deck-body"><p>Customers choose a garage the way they'd choose almost anything else now, rating, distance, and specialty on a map, instead of relying on whoever they happen to know.</p><p>This is also where a garage's reputation starts compounding: a shop that consistently does good work climbs in relevance for every customer searching nearby, not just the ones who already know its name.</p></div></div>
+      <div class="deck-panel" id="deck-request"><div class="deck-eyebrow">Garage Marketplace</div><div class="deck-title">Compare Quotes</div><div class="deck-body"><p>One job posted, multiple real quotes back, the customer sees price, rating, job count, and next available slot side by side, instead of calling three garages separately and trying to remember what each one said.</p><p>This is the core marketplace loop the entire Phase 1 launch is built around: prove that this comparison actually happens and actually closes jobs before building anything further out.</p></div></div>
+      <div class="deck-panel" id="deck-gigs"><div class="deck-eyebrow">Garage Marketplace</div><div class="deck-title">Open Gigs Near You</div><div class="deck-body"><p>Independent mechanics without a fixed shop can still find paid work here, this is the gig layer, distinct from a garage's own job card, and it's what turns a one-person operation into a real participant in the marketplace.</p><p>Jobs are filterable by distance, pay, or recency, and every one shows exactly what's being asked for before a mechanic spends time quoting it.</p></div></div>
+      <div class="deck-panel" id="deck-jobcard"><div class="deck-eyebrow">Garage Marketplace</div><div class="deck-title">Job Card</div><div class="deck-body"><p>The garage's working view of a job, vehicle, customer, mileage in, diagnostic photos, parts used, labor hours, and a stepper showing exactly where the job stands right now.</p><p>Closing this job card is what actually writes a new entry to the vehicle's permanent service history. The record-keeping isn't a separate task a garage has to remember to do, it's a byproduct of doing the job through the app at all.</p></div></div>
+      <div class="deck-panel" id="deck-messages"><div class="deck-eyebrow">Garage Marketplace</div><div class="deck-title">Messages</div><div class="deck-body"><p>Customer and garage stay in one thread, tied directly to the job, not scattered across phone calls, walk-ins, and separate WhatsApp chats that nobody can reference later.</p><p>This thread also becomes evidence if something needs to go to Dispute Resolution, a documented conversation is worth more than two conflicting accounts of what was agreed to.</p></div></div>
+      <div class="deck-panel" id="deck-review"><div class="deck-eyebrow">Garage Marketplace</div><div class="deck-title">Rate the Garage</div><div class="deck-body"><p>A completed job becomes a rating in one tap, the mechanism that makes the whole marketplace self-policing over time instead of relying on the platform to manually vouch for every shop.</p><p>Ratings, response time, and completion rate together are what let a new customer trust a garage they've never used, based on garages they've never met vouching for it through their own experience.</p></div></div>
+      <div class="deck-panel" id="deck-partsearch"><div class="deck-eyebrow">Parts Sourcing</div><div class="deck-title">Search Parts</div><div class="deck-body"><p>Finding the right part starts from what actually fits the customer's specific vehicle, filtered by fitment first, then by OEM, aftermarket, or recycled, and by price.</p><p>"Fits my vehicle" is on by default, not an afterthought filter, because the single biggest failure mode in parts shopping is ordering the wrong thing for a vehicle that looks similar but isn't quite the same.</p></div></div>
+      <div class="deck-panel" id="deck-parts"><div class="deck-eyebrow">Parts Sourcing</div><div class="deck-title">Parts Catalog</div><div class="deck-body"><p>Every listed part is matched against the vehicle's actual VIN, with multiple suppliers competing on price for the same fitment-confirmed item, OEM, aftermarket, and recycled shown side by side rather than forcing a choice upfront.</p><p>This is a real second revenue line beyond garage-job commissions, and it strengthens the garage relationship too: a shop that can source parts through the same app it's already using has one less reason to leave it.</p></div></div>
+      <div class="deck-panel" id="deck-checkout"><div class="deck-eyebrow">Parts Sourcing</div><div class="deck-title">Checkout</div><div class="deck-body"><p>Paying for parts works the same way as everything else on the platform, mobile money first, card as the fallback, because that's how this market actually pays for things, not how a Western fintech assumes it does.</p><p>Delivery estimate and cost are shown before payment, not revealed as a surprise afterward.</p></div></div>
+      <div class="deck-panel" id="deck-browsemobility"><div class="deck-eyebrow">Mobility</div><div class="deck-title">Browse Vehicles</div><div class="deck-body"><p>Every vehicle available to hire nearby, filtered by price, type, and, critically, whether its history is actually verified. That last filter doesn't exist on Turo or Getaround, because they don't have a service-history backbone to draw it from.</p><p>This is where the Vehicle Backbone pillar becomes a genuine competitive advantage in Mobility, not just a nice-to-have: trust that took months to build in the repair marketplace shows up automatically here.</p></div></div>
+      <div class="deck-panel" id="deck-services"><div class="deck-eyebrow">Utilities & Services</div><div class="deck-title">Nearby</div><div class="deck-body"><p>Fuel, EV charging, tires, panel beaters, and lodges in one filterable list, because a trip is never just about the vehicle itself, and splitting these into five separate screens would be exactly the kind of clutter worth avoiding.</p><p>Each category shares the same directory format, icon, name, distance, open status, so switching between what you're looking for doesn't mean relearning a new layout.</p></div></div>
+      <div class="deck-panel" id="deck-routes"><div class="deck-eyebrow">Utilities & Services</div><div class="deck-title">Routes & Directions</div><div class="deck-body"><p>Turn-by-turn directions that already know what's useful along the way, a fuel station two minutes off-route shows up here without a separate search.</p><p>This is a deliberately light feature: the goal isn't to compete with a dedicated maps app, it's to remove the need to leave Street Code for a five-minute detour.</p></div></div>
+      <div class="deck-panel" id="deck-mobility"><div class="deck-eyebrow">Mobility</div><div class="deck-title">Book a Vehicle</div><div class="deck-body"><p>Booking a hire car with the trust layer built in from the start, verified service history, an owner rating, and now a Civic-backed safety check on both the vehicle and the person renting it.</p><p>Price breakdown is shown before payment, and mobile money is the lead payment option here too, Orange Money and MTN aren't relevant in this market, which is why this screen specifically uses Afrimoney and QMoney.</p></div></div>
+      <div class="deck-panel" id="deck-confirmed"><div class="deck-eyebrow">Mobility</div><div class="deck-title">Booking Confirmed</div><div class="deck-body"><p>A confirmation that actually tells the renter what happens next, pickup location, what to expect at the condition check-in, and the return deadline, instead of just a checkmark and a receipt.</p><p>This matters more than it looks like it should: most booking abandonment and post-booking anxiety happens in the gap between paying and knowing exactly what to do next.</p></div></div>
+      <div class="deck-panel" id="deck-riderequest"><div class="deck-eyebrow">Mobility</div><div class="deck-title">New Ride Request</div><div class="deck-body"><p>A driver sees the fare and trip distance before accepting, with a short countdown to respond, no surprises on either side about what a ride actually pays before committing to it.</p><p>This is the driver-side half of ride-hailing that a lot of early sketches of this product were missing entirely, the rider's booking screen is only half the marketplace.</p></div></div>
+      <div class="deck-panel" id="deck-tripprogress"><div class="deck-eyebrow">Mobility</div><div class="deck-title">En Route to Drop-off</div><div class="deck-body"><p>Live trip tracking for the driver, with rider details and ETA in one place, the same underlying map and telemetry infrastructure as Pulse on the fleet side, reused here for a completely different use case.</p><p>This is also what a rider's trusted contact could see if that safety feature gets built out, the groundwork for it already exists in this screen.</p></div></div>
+      <div class="deck-panel" id="deck-tripearnings"><div class="deck-eyebrow">Mobility</div><div class="deck-title">Trip Complete</div><div class="deck-body"><p>Earnings broken down transparently the moment a trip ends, fare, platform fee, and payout method, instead of a driver having to wait or calculate it themselves.</p><p>Daily trip count and total sit right below, because for a driver deciding whether to stay online for one more ride, that number matters more than almost anything else on the screen.</p></div></div>
+      <div class="deck-panel" id="deck-browselistings"><div class="deck-eyebrow">Vehicle Sales Marketplace</div><div class="deck-title">Browse Listings</div><div class="deck-body"><p>Dealers, private sellers, and disposal auctions in one list, filterable by source, because a buyer comparing options doesn't think in separate categories, they think in "what's out there right now."</p><p>Every listing carries the same verified passport data the rest of the platform already built. A private seller's used Land Cruiser shows up with exactly as much trust signal as a dealership's, which is the whole point of building the Vehicle Backbone first.</p></div></div>
+      <div class="deck-panel" id="deck-listvehicle"><div class="deck-eyebrow">Vehicle Sales Marketplace</div><div class="deck-title">List My Vehicle</div><div class="deck-body"><p>A private seller doesn't retype anything: mileage, VIN, and service history pull directly from the vehicle's existing passport, since that record already exists the moment the vehicle was added to the platform.</p><p>This is the payoff for every mileage log and job card completed along the way, a listing that's instantly more credible than a classified ad with no history behind it.</p></div></div>
+      <div class="deck-panel" id="deck-dealerinventory"><div class="deck-eyebrow">Vehicle Sales Marketplace</div><div class="deck-title">Dealer Inventory</div><div class="deck-body"><p>A dealership's stock managed like inventory should be: listed, pending, and sold, with total inventory value visible at a glance instead of buried in a separate spreadsheet.</p><p>Dealers are a distinct account type from private sellers on purpose, higher volume, different verification requirements, and a business relationship worth managing differently from a one-time individual listing.</p></div></div>
+      <div class="deck-panel" id="deck-culture"><div class="deck-eyebrow">Personal Collection & Car Culture</div><div class="deck-title">Feed</div><div class="deck-body"><p>One feed (builds, meets, recalls, and industry tips) blended together the way a real social feed works, instead of splitting car culture and news into tabs nobody will bother checking separately.</p><p>This is the retention engine for the whole platform. Booking a repair is a once-a-year event; scrolling a feed about cars you actually care about is a daily habit, and every post here still runs through the same vehicle-record backbone underneath.</p></div></div>
+      <div class="deck-panel" id="deck-collection"><div class="deck-eyebrow">Personal Collection & Car Culture</div><div class="deck-title">My Collection</div><div class="deck-body"><p>A collector's vehicles valued like a portfolio, not just listed like inventory, with a breakdown showing what share of total value each car represents.</p><p>This is a fundamentally different use case from Fleet Ops even though both involve multiple vehicles: one is about operational cost and compliance, the other is about a collection people are genuinely emotionally invested in.</p></div></div>
+      <div class="deck-panel" id="deck-pubprofile"><div class="deck-eyebrow">Personal Collection & Car Culture</div><div class="deck-title">Collection Profile</div><div class="deck-body"><p>The page people actually want to show off, cover video, follower count, and a photo/video grid organized by car, built on the same verified vehicle data as everything else on the platform.</p><p>This is the screen that answers "why would I open this app for fun, not just when something breaks", and it's the one most likely to get shared outside the platform entirely.</p></div></div>
+      <div class="deck-panel" id="deck-event"><div class="deck-eyebrow">Personal Collection & Car Culture</div><div class="deck-title">Cars & Coffee Banjul</div><div class="deck-body"><p>A car meet with real details (date, host, attendee count, what to expect) instead of a flyer photo circulating on WhatsApp with half the information missing.</p><p>Garages and parts suppliers sponsoring events like this is a natural, non-intrusive way for the marketplace side of the platform to reach people through the community side, without it ever feeling like an ad.</p></div></div>
+      <div class="deck-panel" id="deck-notifications"><div class="deck-eyebrow">Account & Infrastructure</div><div class="deck-title">Notifications</div><div class="deck-body"><p>Everything that needs a reaction (a completed job, a compliance alert, a message, someone liking a build post) in one list instead of scattered across push notifications from six different app sections.</p><p>The mix here is intentional: operational alerts and social ones sit together, because that's genuinely how people check a phone, one list at a time.</p></div></div>
+      <div class="deck-panel" id="deck-payments"><div class="deck-eyebrow">Account & Infrastructure</div><div class="deck-title">Payments</div><div class="deck-body"><p>A wallet that shows exactly what came in, what went out, and when the next payout lands, for a garage, a driver, or anyone else earning through the platform.</p><p>Withdrawal defaults to mobile money because that's the fastest, most-felt benefit for a cash-driven business, faster payout speed is worth leading with over almost any other feature in this pillar.</p></div></div>
+      <div class="deck-panel" id="deck-adminqueue"><div class="deck-eyebrow">Platform Admin · Civic</div><div class="deck-title">Verification Queue</div><div class="deck-body"><p>Nobody goes live on the platform (garage, supplier, or mechanic) without a human reviewing their documents first. This is where that review actually happens, with pending, verified, and flagged counts visible at a glance.</p><p>Missing documents don't get an automatic rejection, "Request Info" keeps a legitimate but incomplete application moving instead of dead-ending it.</p></div></div>
+      <div class="deck-panel" id="deck-admindispute"><div class="deck-eyebrow">Platform Admin · Civic</div><div class="deck-title">Dispute Resolution</div><div class="deck-body"><p>When a job goes wrong, the claim, the counter-claim, and the actual evidence (chat logs, photos, invoices) live in one place instead of scattered across whoever happened to save what.</p><p>The decision here is binary and consequential: refund the customer or release funds to the garage. That weight is exactly why this screen exists separately from a general support inbox.</p></div></div>
+      <div class="deck-panel" id="deck-appeals"><div class="deck-eyebrow">Platform Admin · Civic</div><div class="deck-title">Appeals & Overrides</div><div class="deck-body"><p>The legitimate path for reversing a violation, suspension, or dispute outcome, every decision here requires a typed reason before it can be submitted, no exceptions.</p><p>This screen exists specifically as the alternative to an undisclosed backdoor: real control over outcomes, exercised by a named person, for a stated reason, on the record.</p></div></div>
+      <div class="deck-panel" id="deck-auditlog"><div class="deck-eyebrow">Platform Admin · Civic</div><div class="deck-title">Audit Log</div><div class="deck-body"><p>Every admin action (appeal decisions, verification approvals, dispute resolutions) logged with who did it, when, and why, and structurally impossible to edit or delete afterward, including by platform operators.</p><p>This is the record that makes every override defensible if it's ever questioned, by a regulator, a court, or just an angry user. Without it, every admin decision is just someone's word.</p></div></div>
+      <div class="deck-panel" id="deck-policelookup"><div class="deck-eyebrow">Law Enforcement Access · Civic</div><div class="deck-title">Plate / VIN Lookup</div><div class="deck-body"><p>A scan returns exactly what an officer is legally entitled to know (registration, insurance status, stolen flag, outstanding violations), nothing more, and nothing hidden from the record of the check itself.</p><p>This screen is sold separately to law enforcement as part of Street Code Civic, entirely apart from the consumer app, specifically so it never becomes a reason for regular vehicle owners to distrust the product they use every day.</p></div></div>
+      <div class="deck-panel" id="deck-stolenalerts"><div class="deck-eyebrow">Law Enforcement Access · Civic</div><div class="deck-title">Stolen Vehicle Alerts</div><div class="deck-body"><p>Every active report shows up here nationwide, the moment an owner files one, visible to any officer running a check anywhere in the country, not just the precinct closest to where it happened.</p><p>Marking a vehicle recovered closes the loop and clears the flag everywhere at once, so a recovered vehicle doesn't keep getting stopped weeks after the fact.</p></div></div>
+      <div class="deck-panel" id="deck-roadside"><div class="deck-eyebrow">Law Enforcement Access · Civic</div><div class="deck-title">Roadside Verification</div><div class="deck-body"><p>A scanned passport returns a fast pass/fail checklist at a stop, registration, insurance, flags, cutting what used to require a radio call and paperwork down to seconds.</p><p>Any further search requires the officer to specify the type of search being conducted and notify the driver before it happens, a procedural safeguard built into the product, not left to be assumed.</p></div></div>
+      <div class="deck-panel" id="deck-violation"><div class="deck-eyebrow">Law Enforcement Access · Civic</div><div class="deck-title">Resolve Violation</div><div class="deck-body"><p>A recorded violation doesn't automatically mean a fine, a short in-app course is offered as an alternative resolution, which is a genuinely better outcome for a first-time or minor issue than punitive-only enforcement.</p><p>The consequence for ignoring it entirely is stated plainly: unresolved after 30 days risks a license suspension visible nationwide to any officer performing a check, consequential, but never hidden or arbitrary.</p></div></div>
+      <div class="deck-panel" id="deck-paymethods"><div class="deck-eyebrow">Account & Infrastructure</div><div class="deck-title">Payment Methods</div><div class="deck-body"><p>Every way someone can get paid or pay in, managed from one place, Afrimoney and QMoney as the primary mobile money rails, cards as the secondary option for tourism-driven bookings.</p><p>A default payment method is always set, so checkout never stalls on a decision that should have already been made ahead of time.</p></div></div>
+      <div class="deck-panel" id="deck-settings"><div class="deck-eyebrow">Account & Infrastructure</div><div class="deck-title">Settings</div><div class="deck-body"><p>Privacy defaults matter here specifically: Pulse live-data sharing and public collection profiles are both off unless explicitly turned on by the individual owner, never assumed, never bundled into a broader terms-of-service checkbox.</p><p>Currency selection (GMD, USD, EUR, GBP) sits right alongside, a small detail, but the right one for a platform launching in a market where several currencies genuinely circulate day to day.</p></div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const sidebar = document.querySelector('.sidebar');
+  const siblingNav = document.getElementById('siblingNav');
+  const defaults = { consumer: 'garage', civic: 'capacity' };
+
+  function setTripType(type, el) {
+    document.querySelectorAll('#tripTypeToggle .opt').forEach(o => o.classList.remove('on'));
+    el.classList.add('on');
+    document.getElementById('rentalMode').style.display = type === 'rental' ? 'block' : 'none';
+    document.getElementById('townMode').style.display = type === 'town' ? 'block' : 'none';
+    document.getElementById('leaseMode').style.display = type === 'lease' ? 'block' : 'none';
+  }
+
+  // Build a map of screenId -> { category, siblings: [{id, label}] } from the sidebar DOM itself,
+  // so it always stays in sync with whatever's actually in the nav.
+  const categoryMap = {};
+  document.querySelectorAll('.pillar-group').forEach(group => {
+    const category = group.querySelector('.pillar-title')?.textContent || '';
+    const items = Array.from(group.querySelectorAll('.nav-item')).map(el => ({
+      id: el.dataset.target,
+      label: el.textContent.trim()
+    }));
+    items.forEach(item => {
+      categoryMap[item.id] = { category, siblings: items };
+    });
+  });
+
+  function renderSiblingNav(targetId) {
+    const info = categoryMap[targetId];
+    siblingNav.innerHTML = '';
+    if (!info || info.siblings.length < 2) return;
+    info.siblings.forEach(sib => {
+      const pill = document.createElement('div');
+      pill.className = 'sib-pill' + (sib.id === targetId ? ' current' : '');
+      pill.textContent = sib.label;
+      pill.addEventListener('click', () => activateScreen(sib.id));
+      siblingNav.appendChild(pill);
+    });
+  }
+
+  function activateScreen(targetId) {
+    document.querySelectorAll('.nav-item').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.deck-panel').forEach(d => d.classList.remove('active'));
+
+    const screenEl = document.getElementById(targetId);
+    if (screenEl) screenEl.classList.add('active');
+    const deck = document.getElementById('deck-' + targetId);
+    if (deck) deck.classList.add('active');
+    const navItem = document.querySelector(`.nav-item[data-target="${targetId}"]`);
+    if (navItem) navItem.classList.add('active');
+
+    renderSiblingNav(targetId);
+    document.querySelector('.stage').scrollTop = 0;
+    closeSidebarOnMobile();
+  }
+
+  document.querySelectorAll('.nav-item').forEach(item => {
+    item.addEventListener('click', () => activateScreen(item.dataset.target));
+  });
+
+  document.querySelectorAll('.app-switch-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const mode = btn.dataset.app;
+      document.querySelectorAll('.app-switch-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      sidebar.dataset.mode = mode;
+      activateScreen(defaults[mode]);
+    });
+  });
+
+  // Mobile sidebar toggle
+  const hamburger = document.getElementById('hamburger');
+  const backdrop = document.getElementById('sidebarBackdrop');
+  function closeSidebarOnMobile() {
+    sidebar.classList.remove('open');
+    backdrop.classList.remove('open');
+  }
+  hamburger.addEventListener('click', () => {
+    sidebar.classList.toggle('open');
+    backdrop.classList.toggle('open');
+  });
+  backdrop.addEventListener('click', closeSidebarOnMobile);
+
+  // Initial render for the default screen
+  renderSiblingNav('garage');
+</script>
+
+</body>
+</html>

@@ -1,0 +1,3196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Street Code OS — What Runs The City</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700;800&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --graphite:#121415;
+    --graphite-2:#1B1E1F;
+    --graphite-3:#242829;
+    --steel:#3C4547;
+    --steel-lt:#7C8A8C;
+    --paper:#ECEAE4;
+    --paper-dim:#C9C6BC;
+    --paper-card:#F4F2EC;
+    --amber:#E3A008;
+    --amber-dim:#8A6207;
+    --rust:#C8501A;
+    --rust-lt:#E5632E;
+    --line:#2E3436;
+    --line-light:#DAD6C9;
+    --good:#2E7D32;
+    --good-bg:#DCEBDD;
+    --good-fg:#1B5E20;
+    --warn-bg:#FBE3C6;
+    --warn-fg:#8A4B0C;
+    --bad-bg:#F3D6D2;
+    --bad-fg:#95321F;
+    --blue-bg:#E1F0FA;
+    --blue-fg:#1565C0;
+    --radius-sm:4px;
+    --radius-md:8px;
+    --radius-lg:12px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent;}
+  body{
+    background:var(--graphite); font-family:'IBM Plex Sans',-apple-system,BlinkMacSystemFont,sans-serif;
+    color:var(--paper); min-height:100vh; overflow-x:hidden; line-height:1.45;
+  }
+  .mono{font-family:'IBM Plex Mono',monospace;}
+  .display{font-family:'Oswald',sans-serif; text-transform:uppercase; letter-spacing:0.02em;}
+
+  /* ---- TOP COMMAND BAR ---- */
+  .top-control-bar{
+    height:46px; background:#0B0C0D; border-bottom:1px solid var(--line);
+    display:flex; align-items:center; justify-content:space-between; padding:0 16px;
+    position:sticky; top:0; z-index:100; font-size:11px;
+  }
+  .top-left{display:flex; align-items:center; gap:12px;}
+  .os-badge{
+    display:flex; align-items:center; gap:6px; font-weight:700; letter-spacing:0.08em;
+    text-transform:uppercase; color:var(--paper);
+  }
+  .os-badge .dot-live{width:7px; height:7px; border-radius:50%; background:var(--amber); box-shadow:0 0 8px var(--amber); animation:pulse 2s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;transform:scale(1);} 50%{opacity:0.4;transform:scale(0.8);}}
+
+  .top-right{display:flex; align-items:center; gap:10px;}
+  .view-mode-selector{
+    display:flex; background:var(--graphite-2); padding:2px; border-radius:6px; border:1px solid var(--line);
+  }
+  .view-btn{
+    padding:4px 9px; font-size:11px; font-weight:600; color:var(--steel-lt); border-radius:4px; cursor:pointer;
+    border:none; background:transparent; transition:all 0.15s;
+  }
+  .view-btn.active{background:var(--amber); color:var(--graphite);}
+
+  .curr-picker{
+    background:var(--graphite-2); border:1px solid var(--line); color:var(--paper);
+    font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:600; padding:4px 8px; border-radius:6px; cursor:pointer;
+  }
+  .quick-pill{
+    background:transparent; border:1px solid var(--line); color:var(--paper-dim); padding:4px 8px;
+    border-radius:6px; font-size:11px; cursor:pointer; font-weight:500;
+  }
+  .quick-pill:hover{border-color:var(--amber); color:var(--amber);}
+
+  /* ---- NATIONWIDE STOLEN ALERT BANNER ---- */
+  #nationwideAlert{
+    display:none; background:linear-gradient(90deg, #8B0000, #B22222); color:#fff;
+    padding:10px 18px; font-size:12px; font-weight:700; align-items:center; justify-content:space-between;
+    border-bottom:2px solid #FF4444; z-index:90; position:relative; animation:slideDown 0.3s ease;
+  }
+  #nationwideAlert.active{display:flex;}
+  @keyframes slideDown{from{transform:translateY(-100%);} to{transform:translateY(0);}}
+
+  /* ---- MAIN LAYOUT ---- */
+  .app{display:flex; min-height:calc(100vh - 46px);}
+
+  /* ---- SIDEBAR ---- */
+  .sidebar{
+    width:240px; flex-shrink:0; border-right:1px solid var(--line);
+    padding:20px 14px; display:flex; flex-direction:column; gap:2px;
+    background:var(--graphite); overflow-y:auto; max-height:calc(100vh - 46px);
+  }
+  .brandmark{display:flex; align-items:center; gap:8px; padding:0 6px 18px;}
+  .brandmark .plate{background:var(--amber); color:var(--graphite); font-weight:800; padding:3px 7px; font-size:11px; letter-spacing:0.1em; border-radius:3px; font-family:'IBM Plex Mono',monospace;}
+  .brandmark .name{font-size:15px; font-weight:800; letter-spacing:-0.01em; color:var(--paper); font-family:'Oswald',sans-serif;}
+  .brandmark .sub{font-size:9px; letter-spacing:0.08em; color:var(--steel-lt); text-transform:uppercase; margin-top:2px;}
+
+  .app-switch{display:flex; gap:3px; background:var(--graphite-2); padding:3px; border-radius:8px; margin-bottom:16px; border:1px solid var(--line);}
+  .app-switch-btn{flex:1; text-align:center; font-size:11px; font-weight:700; padding:7px 4px; border-radius:6px; cursor:pointer; color:var(--steel-lt); transition:all 0.2s;}
+  .app-switch-btn.active{background:var(--amber); color:var(--graphite);}
+
+  .sidebar[data-mode="civic"] .pillar-group[data-app="consumer"]{display:none;}
+  .sidebar[data-mode="consumer"] .pillar-group[data-app="civic"]{display:none;}
+
+  .pillar-group{margin-bottom:14px;}
+  .pillar-title{font-size:9px; letter-spacing:0.12em; text-transform:uppercase; color:var(--steel-lt); padding:6px 8px 4px; font-weight:700; font-family:'IBM Plex Mono',monospace;}
+  .nav-item{
+    padding:8px 10px; font-size:12.5px; border-radius:6px; cursor:pointer; color:var(--paper-dim);
+    display:flex; align-items:center; gap:8px; transition:all 0.15s; user-select:none;
+  }
+  .nav-item .dot{width:5px; height:5px; border-radius:50%; background:var(--steel-lt); flex-shrink:0; transition:all 0.15s;}
+  .nav-item:hover{background:var(--graphite-2); color:var(--paper);}
+  .nav-item.active{background:var(--graphite-2); color:var(--amber); font-weight:700;}
+  .nav-item.active .dot{background:var(--amber); box-shadow:0 0 6px var(--amber);}
+  .nav-item.nav-secondary{display:none;}
+
+  /* ---- STAGE ---- */
+  .stage{flex:1; display:flex; flex-direction:column; align-items:center; padding:24px 20px 80px; overflow-y:auto; overflow-x:hidden;}
+  .stage-row{display:flex; justify-content:center; align-items:flex-start; gap:48px; width:100%; max-width:960px;}
+
+  /* VIEW MODES */
+  body.view-mobile .deck-panel{display:none !important;}
+  body.view-mobile .stage-row{justify-content:center;}
+  body.view-mobile .phone{max-width:420px; width:100%;}
+
+  body.view-console .stage-row{max-width:1200px; gap:28px;}
+  body.view-console .phone{width:460px; min-height:860px;}
+  body.view-console .deck-panel{width:540px;}
+
+  .sibling-nav{display:flex; flex-wrap:wrap; gap:6px; max-width:960px; width:100%; margin-bottom:18px;}
+  .sib-pill{
+    font-size:11px; font-weight:600; padding:6px 13px; border-radius:20px; cursor:pointer;
+    background:var(--graphite-2); color:var(--paper-dim); border:1px solid var(--line); white-space:nowrap; transition:all 0.15s;
+  }
+  .sib-pill.current{background:var(--amber); color:var(--graphite); border-color:var(--amber); font-weight:700;}
+  .sib-pill:hover:not(.current){color:var(--paper); border-color:var(--steel-lt);}
+
+  /* ---- PHONE CONTAINER ---- */
+  .phone{
+    width:400px; background:var(--paper); color:var(--graphite);
+    border-radius:36px; border:8px solid #0F1111; overflow:hidden;
+    box-shadow:0 25px 60px rgba(0,0,0,0.65), 0 0 0 1px rgba(255,255,255,0.06); min-height:830px; position:relative; height:fit-content;
+  }
+  .notch{position:absolute; top:0; left:50%; transform:translateX(-50%); width:126px; height:24px; background:#0F1111; border-radius:0 0 16px 16px; z-index:20;}
+  .screen{display:none; padding:38px 18px 28px; min-height:830px;}
+  .screen.active{display:block; animation:screenIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);}
+  @keyframes screenIn{from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);}}
+
+  /* ---- DECK PANEL ---- */
+  .deck-panel{width:420px; flex-shrink:0; display:none; padding-top:16px;}
+  .deck-panel.active{display:block;}
+  .deck-eyebrow{
+    font-size:10px; font-weight:800; letter-spacing:0.12em; text-transform:uppercase;
+    color:var(--amber); margin-bottom:8px; font-family:'IBM Plex Mono',monospace;
+  }
+  .deck-title{
+    font-size:28px; font-weight:800; color:var(--paper); line-height:1.15;
+    font-family:'Oswald',sans-serif; margin-bottom:16px;
+    padding-bottom:16px; border-bottom:1px solid var(--line);
+  }
+  .deck-body p{font-size:13.5px; line-height:1.65; color:var(--paper-dim); margin:0 0 14px;}
+  .deck-body p:last-child{margin-bottom:0;}
+  .deck-body b{color:var(--paper); font-weight:700;}
+  .deck-meta-card{background:var(--graphite-2); border:1px solid var(--line); border-radius:8px; padding:12px; margin-top:16px;}
+  .deck-meta-row{display:flex; justify-content:space-between; font-size:11.5px; padding:4px 0; border-bottom:1px dotted var(--line);}
+  .deck-meta-row:last-child{border-bottom:none;}
+  .deck-meta-k{color:var(--steel-lt);} .deck-meta-v{color:var(--amber); font-weight:600; font-family:'IBM Plex Mono',monospace;}
+
+  /* ---- PHONE INTERNAL COMPONENTS ---- */
+  .app-header{display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:14px;}
+  .app-header .eyebrow{font-size:9.5px; letter-spacing:0.14em; color:var(--rust); text-transform:uppercase; font-weight:800; font-family:'IBM Plex Mono',monospace;}
+  .app-header h1{margin:2px 0 0; font-size:21px; font-family:'Oswald',sans-serif; font-weight:700; letter-spacing:0.01em;}
+  .avatar{width:32px; height:32px; border-radius:50%; background:var(--steel); flex-shrink:0; display:flex; align-items:center; justify-content:center; color:#fff; font-size:12px; font-weight:700;}
+
+  .role-toggle{display:flex; gap:3px; background:#DAD6C9; padding:3px; border-radius:8px; margin-bottom:14px;}
+  .role-toggle .opt{flex:1; text-align:center; font-size:11px; font-weight:700; padding:6px 4px; border-radius:6px; cursor:pointer; color:var(--steel); transition:all 0.15s;}
+  .role-toggle .opt.on{background:#fff; color:var(--graphite); box-shadow:0 1px 3px rgba(0,0,0,0.1);}
+
+  /* VIN Plate */
+  .vin-plate{
+    background:linear-gradient(155deg,#F6F4EE,#DAD6C9); border:1px solid #B9B4A4; border-radius:8px;
+    padding:16px 16px 13px; position:relative; box-shadow:inset 0 1px 0 rgba(255,255,255,0.7), 0 3px 8px rgba(0,0,0,0.12); margin-bottom:12px;
+  }
+  .vin-plate::before, .vin-plate::after{content:''; position:absolute; top:8px; width:6px; height:6px; border-radius:50%; background:#9C9788; box-shadow:inset 0 1px 1px rgba(0,0,0,0.4);}
+  .vin-plate::before{left:8px;} .vin-plate::after{right:8px;}
+  .vin-plate .make-model{font-size:15px; font-weight:800; margin-bottom:2px; font-family:'Oswald',sans-serif; letter-spacing:0.02em;}
+  .vin-plate .vin-row{font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:0.06em; color:var(--steel); margin-top:8px; display:flex; justify-content:space-between; border-top:1px dashed #B9B4A4; padding-top:7px;}
+  .vin-plate .meta-row{display:flex; gap:14px; margin-top:7px; font-size:11px; color:var(--steel);}
+  .vin-plate .meta-row b{color:var(--graphite); display:block; font-size:13px; font-family:'IBM Plex Sans',sans-serif;}
+  .status-chip{position:absolute; top:12px; right:14px; font-size:9px; letter-spacing:0.06em; text-transform:uppercase; font-weight:800; padding:3px 7px; border-radius:20px; font-family:'IBM Plex Mono',monospace;}
+  .status-chip.due{background:var(--warn-bg); color:var(--warn-fg);}
+  .status-chip.ok{background:var(--good-bg); color:var(--good-fg);}
+  .status-chip.bad{background:var(--bad-bg); color:var(--bad-fg);}
+
+  .section-label{font-size:9.5px; letter-spacing:0.12em; text-transform:uppercase; color:var(--steel-lt); font-weight:800; margin:16px 0 8px; font-family:'IBM Plex Mono',monospace;}
+  .action-row{display:flex; gap:8px; margin-top:12px;}
+  .btn{flex:1; text-align:center; padding:11px 10px; border-radius:7px; font-size:12px; font-weight:700; cursor:pointer; border:1px solid var(--line); transition:all 0.15s; user-select:none;}
+  .btn.primary{background:var(--rust); color:#fff; border:none;}
+  .btn.primary:hover{background:var(--rust-lt);}
+  .btn.ghost{background:transparent; color:var(--graphite); border:1px solid #B9B4A4;}
+  .btn.ghost:hover{background:rgba(0,0,0,0.04); border-color:var(--steel);}
+  .btn.small{padding:6px 9px; font-size:10.5px;}
+  .btn:active{transform:scale(0.98);}
+
+  .stat-strip{display:flex; gap:8px; margin-top:10px; margin-bottom:10px;}
+  .stat{flex:1; background:#F4F2EC; border:1px solid #DAD6C9; border-radius:8px; padding:8px 10px;}
+  .stat .num{font-size:17px; font-weight:800; font-family:'IBM Plex Mono',monospace;}
+  .stat .lbl{font-size:9px; color:var(--steel); text-transform:uppercase; letter-spacing:0.05em; font-weight:600;}
+
+  .timeline-item{display:flex; gap:10px; padding:10px 0; border-bottom:1px solid #DAD6C9;}
+  .timeline-item .dot2{width:8px; height:8px; border-radius:50%; background:var(--rust); margin-top:5px; flex-shrink:0;}
+  .timeline-item .body{flex:1;}
+  .timeline-item .title{font-size:12.5px; font-weight:700;}
+  .timeline-item .sub{font-size:10.5px; color:var(--steel); margin-top:1px;}
+  .timeline-item .amt{font-size:12px; font-weight:800; color:var(--steel); font-family:'IBM Plex Mono',monospace;}
+
+  .stepper{display:flex; margin:14px 0 16px;}
+  .step{flex:1; text-align:center; position:relative;}
+  .step .bar{height:4px; background:#DAD6C9; margin-bottom:6px; border-radius:2px;}
+  .step.done .bar{background:var(--good);}
+  .step.current .bar{background:var(--amber);}
+  .step .lbl{font-size:8.5px; text-transform:uppercase; color:var(--steel); font-weight:700; font-family:'IBM Plex Mono',monospace;}
+  .step.current .lbl{color:var(--graphite); font-weight:800;}
+
+  .card{background:#F4F2EC; border:1px solid #DAD6C9; border-radius:10px; padding:12px; margin-bottom:10px;}
+  .card .row{display:flex; justify-content:space-between; font-size:11.5px; padding:5px 0; border-bottom:1px dotted #C9C6BC;}
+  .card .row:last-child{border-bottom:none;}
+  .card .row .k{color:var(--steel);} .card .row .v{font-weight:700;}
+
+  .field{margin-bottom:12px;}
+  .field label{display:block; font-size:9.5px; text-transform:uppercase; letter-spacing:0.06em; color:var(--steel); font-weight:800; margin-bottom:5px; font-family:'IBM Plex Mono',monospace;}
+  .field input, .field .input-like, .field select{width:100%; padding:9px 11px; border-radius:7px; border:1px solid #C9C6BC; background:#fff; font-size:12.5px; color:var(--graphite); font-family:inherit;}
+  .scan-box{border:2px dashed #B9B4A4; border-radius:10px; padding:22px 14px; text-align:center; color:var(--steel); font-size:12px; margin-bottom:12px; background:#FAF9F5; cursor:pointer;}
+  .scan-box:hover{border-color:var(--amber); background:#FFFDF7;}
+
+  /* Media placeholders */
+  .media-ph{
+    position:relative; display:block; overflow:hidden; border-radius:6px;
+    background:radial-gradient(circle at 30% 20%, rgba(255,255,255,0.2), transparent 50%), linear-gradient(160deg, #9C9788, #6B685D 55%, #4A4842);
+  }
+  .media-ph .micon{
+    position:absolute; top:7px; left:7px; width:22px; height:22px; border-radius:5px;
+    background:rgba(20,22,23,0.75); color:#fff; font-size:11px; display:flex; align-items:center; justify-content:center;
+  }
+  .media-ph .mlabel{
+    position:absolute; left:0; right:0; bottom:0; padding:12px 8px 5px;
+    background:linear-gradient(to top, rgba(10,11,12,0.85), transparent);
+    color:#fff; font-size:9px; font-weight:700;
+  }
+  .media-ph.video::before{
+    content:'▶'; position:absolute; top:7px; right:7px; width:18px; height:18px; border-radius:50%;
+    background:rgba(20,22,23,0.75); color:#fff; font-size:8px; display:flex; align-items:center; justify-content:center;
+  }
+
+  .quote{background:#F4F2EC; border:1px solid #DAD6C9; border-radius:9px; padding:11px; margin-bottom:8px; cursor:pointer; transition:all 0.15s;}
+  .quote:hover{border-color:var(--amber);}
+  .quote .top{display:flex; justify-content:space-between; align-items:center;}
+  .quote .shop{font-size:13px; font-weight:800;}
+  .quote .price{font-size:14.5px; font-weight:800; color:var(--rust); font-family:'IBM Plex Mono',monospace;}
+  .quote .meta{font-size:10px; color:var(--steel); margin-top:3px;}
+  .stars{color:var(--amber); font-size:11px;}
+
+  .paycard{background:linear-gradient(135deg,#2B2F30,#151718); color:#fff; border-radius:12px; padding:16px; margin-bottom:12px; box-shadow:0 4px 12px rgba(0,0,0,0.2);}
+  .paycard .pcnum{font-family:'IBM Plex Mono',monospace; font-size:15px; letter-spacing:0.1em; margin:12px 0 10px; color:var(--amber);}
+  .paycard .pcrow{display:flex; justify-content:space-between; font-size:10px; color:#B9B4A4; text-transform:uppercase;}
+  .payout-row{display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-bottom:1px dotted #C9C6BC; font-size:12px;}
+  .payout-row .pos{color:var(--good-fg); font-weight:700;}
+
+  .paymethod{display:flex; align-items:center; gap:11px; background:#F4F2EC; border:1.5px solid #DAD6C9; border-radius:9px; padding:11px; margin-bottom:8px; cursor:pointer;}
+  .paymethod.sel{border-color:var(--rust); background:#FDF4F0;}
+  .paymethod .micon2{width:32px; height:32px; border-radius:8px; background:var(--graphite); color:#fff; display:flex; align-items:center; justify-content:center; font-size:15px; flex-shrink:0;}
+  .paymethod .mname{font-size:12px; font-weight:800;}
+  .paymethod .msub{font-size:10px; color:var(--steel);}
+  .momo-tag{font-size:8px; font-weight:800; background:var(--good-bg); color:var(--good-fg); padding:2px 6px; border-radius:20px; margin-left:auto; text-transform:uppercase;}
+
+  .role-card{background:#F4F2EC; border:1.5px solid #DAD6C9; border-radius:10px; padding:11px; margin-bottom:8px; display:flex; align-items:center; gap:10px; cursor:pointer; transition:all 0.15s;}
+  .role-card:hover{border-color:var(--amber);}
+  .role-card.sel{border-color:var(--rust); background:#FDF4F0;}
+  .role-card .ricon{width:34px; height:34px; border-radius:8px; background:var(--graphite); color:var(--amber); display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0;}
+  .role-card .rname{font-size:12.5px; font-weight:800;}
+  .role-card .rsub{font-size:10px; color:var(--steel);}
+
+  .badge-authority{background:var(--graphite); color:var(--amber); font-size:9px; font-weight:800; letter-spacing:0.08em; padding:4px 8px; border-radius:4px; display:inline-block; text-transform:uppercase; margin-bottom:8px; font-family:'IBM Plex Mono',monospace;}
+  .cover-badge{display:inline-flex; align-items:center; gap:6px; background:var(--good-bg); color:var(--good-fg); font-size:10px; font-weight:700; padding:5px 9px; border-radius:20px; margin-bottom:10px;}
+
+  .dtc-item{display:flex; gap:10px; align-items:flex-start; background:#F4F2EC; border:1px solid #DAD6C9; border-radius:9px; padding:10px; margin-bottom:8px;}
+  .dtc-code{font-family:'IBM Plex Mono',monospace; font-weight:800; font-size:13px; background:var(--graphite); color:#fff; padding:3px 7px; border-radius:5px; flex-shrink:0;}
+  .dtc-item.crit .dtc-code{background:var(--rust);}
+  .dtc-desc{font-size:12px; font-weight:700;}
+  .dtc-sub{font-size:10px; color:var(--steel); margin-top:2px;}
+
+  .verify-check{display:flex; align-items:center; gap:10px; padding:9px 0; border-bottom:1px solid #DAD6C9; font-size:12.5px; font-weight:700;}
+  .verify-check .vmark{width:20px; height:20px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; color:#fff; flex-shrink:0;}
+  .verify-check .vmark.pass{background:var(--good);}
+  .verify-check .vmark.fail{background:var(--rust);}
+
+  .audit-entry{display:flex; gap:10px; padding:9px 0; border-bottom:1px solid #DAD6C9;}
+  .audit-entry .atime{font-family:'IBM Plex Mono',monospace; font-size:9.5px; color:var(--steel-lt); width:70px; flex-shrink:0; padding-top:1px;}
+  .audit-entry .abody{flex:1;}
+  .audit-entry .aaction{font-size:12px; font-weight:700;}
+  .audit-entry .adetail{font-size:10px; color:var(--steel); margin-top:2px; line-height:1.45;}
+  .audit-entry .aactor{display:inline-block; background:var(--graphite); color:var(--amber); font-size:8.5px; font-weight:700; padding:1px 5px; border-radius:3px; margin-right:5px;}
+
+  .queue-row{background:#F4F2EC; border:1px solid #DAD6C9; border-radius:9px; padding:11px; margin-bottom:8px;}
+  .queue-row .qtop{display:flex; justify-content:space-between; align-items:center;}
+  .queue-row .qname{font-size:12px; font-weight:800;}
+  .queue-row .qtype{font-size:9px; color:var(--steel-lt); text-transform:uppercase; letter-spacing:0.05em; font-family:'IBM Plex Mono',monospace;}
+  .queue-row .qactions{display:flex; gap:6px; margin-top:8px;}
+  .queue-row .qactions .btn{padding:6px 8px; font-size:10.5px;}
+
+  .part{background:#F4F2EC; border:1px solid #DAD6C9; border-radius:9px; padding:10px 12px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;}
+  .part .pname{font-size:12px; font-weight:700;}
+  .part .psub{font-size:10px; color:var(--steel);}
+  .part .pprice{font-size:13px; font-weight:800; font-family:'IBM Plex Mono',monospace;}
+  .fit-badge{font-size:8.5px; background:var(--good-bg); color:var(--good-fg); padding:2px 6px; border-radius:20px; font-weight:800; text-transform:uppercase;}
+
+  .svc-row{background:#F4F2EC; border:1px solid #DAD6C9; border-radius:9px; padding:10px 12px; margin-bottom:8px; display:flex; align-items:center; gap:10px;}
+  .svc-row .svc-icon{width:34px; height:34px; border-radius:8px; background:var(--graphite); display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0;}
+  .svc-row .svc-name{font-size:12px; font-weight:800;}
+  .svc-row .svc-meta{font-size:10px; color:var(--steel); margin-top:2px;}
+  .svc-row .svc-dist{margin-left:auto; font-size:11px; font-weight:700; color:var(--steel); text-align:right; flex-shrink:0; font-family:'IBM Plex Mono',monospace;}
+  .svc-row .svc-open{display:block; font-size:8.5px; color:var(--good-fg); font-weight:800; margin-top:1px;}
+
+  .chat-thread{display:flex; flex-direction:column; gap:8px; margin-bottom:12px; max-height:360px; overflow-y:auto;}
+  .bubble{max-width:75%; padding:9px 12px; border-radius:12px; font-size:12px; line-height:1.4;}
+  .bubble.them{background:#F4F2EC; border:1px solid #DAD6C9; align-self:flex-start; border-bottom-left-radius:3px;}
+  .bubble.me{background:var(--rust); color:#fff; align-self:flex-end; border-bottom-right-radius:3px;}
+  .chat-time{font-size:9px; color:var(--steel-lt); text-align:center; margin:3px 0; font-family:'IBM Plex Mono',monospace;}
+  .chat-input{display:flex; gap:8px; border:1px solid #C9C6BC; border-radius:20px; padding:6px 6px 6px 14px; align-items:center; background:#fff;}
+  .chat-input input{border:none; outline:none; font-size:12px; flex:1; background:transparent;}
+
+  .star-row{display:flex; gap:6px; justify-content:center; margin:14px 0; font-size:28px; color:var(--paper-dim); cursor:pointer;}
+  .star-row .on{color:var(--amber);}
+  textarea.review-box{width:100%; min-height:75px; border-radius:8px; border:1px solid #C9C6BC; padding:10px; font-size:12px; font-family:inherit; color:var(--graphite); resize:none;}
+
+  .notif{display:flex; gap:10px; padding:10px 0; border-bottom:1px solid #DAD6C9;}
+  .notif .nicon{width:28px; height:28px; border-radius:7px; background:var(--graphite); color:var(--amber); display:flex; align-items:center; justify-content:center; font-size:12px; flex-shrink:0;}
+  .notif .ntitle{font-size:12px; font-weight:700;}
+  .notif .nsub{font-size:10px; color:var(--steel); margin-top:2px;}
+  .notif .ntime{font-size:9px; color:var(--steel-lt); margin-left:auto; white-space:nowrap; font-family:'IBM Plex Mono',monospace;}
+
+  .flist{display:flex; flex-direction:column; gap:8px;}
+  .frow{background:#F4F2EC; border:1px solid #DAD6C9; border-radius:8px; padding:9px 11px; display:flex; justify-content:space-between; align-items:center;}
+  .frow .name{font-size:12px; font-weight:700;}
+  .frow .driver{font-size:10px; color:var(--steel); margin-top:1px;}
+  .frow .flag{font-size:8.5px; font-weight:800; padding:2px 7px; border-radius:20px; font-family:'IBM Plex Mono',monospace;}
+
+  .cap-row{background:#F4F2EC; border:1px solid #DAD6C9; border-radius:9px; padding:10px 12px; margin-bottom:8px;}
+  .cap-row .ctop{display:flex; justify-content:space-between; align-items:center;}
+  .cap-row .cname{font-size:12px; font-weight:800;}
+  .cap-row .cflag{font-size:8.5px; font-weight:800; padding:2px 7px; border-radius:20px; font-family:'IBM Plex Mono',monospace;}
+  .cap-row .cmeta{font-size:10px; color:var(--steel); margin-top:4px; line-height:1.45;}
+
+  .filter-chip-row{display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px;}
+  .filter-chip{font-size:9.5px; font-weight:700; padding:5px 10px; border-radius:20px; border:1px solid #C9C6BC; color:var(--steel); cursor:pointer; transition:all 0.15s;}
+  .filter-chip.on{background:var(--graphite); color:#fff; border-color:var(--graphite);}
+
+  .ride-alert{background:var(--graphite); color:#fff; border-radius:12px; padding:18px; text-align:center; margin-bottom:14px; box-shadow:0 6px 16px rgba(0,0,0,0.25);}
+  .ride-alert .rfare{font-size:28px; font-weight:800; color:var(--amber); font-family:'IBM Plex Mono',monospace;}
+  .ride-alert .rmeta{font-size:11px; color:var(--paper-dim); margin-top:4px;}
+  .countdown-ring{
+    width:48px; height:48px; border-radius:50%; border:4px solid var(--amber); margin:12px auto 0;
+    display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:800; color:#fff;
+    font-family:'IBM Plex Mono',monospace; animation:spinRing 1s linear infinite;
+  }
+  @keyframes spinRing{0%{border-color:var(--amber);} 50%{border-color:var(--rust);} 100%{border-color:var(--amber);}}
+
+  .trip-progress{display:flex; align-items:center; margin:14px 0;}
+  .trip-progress .tp-dot{width:10px; height:10px; border-radius:50%; background:var(--rust); flex-shrink:0;}
+  .trip-progress .tp-line{flex:1; height:3px; background:var(--rust);}
+  .trip-progress .tp-dot.end{background:#DAD6C9;}
+  .earnings-hero{text-align:center; padding:20px 0 8px;}
+  .earnings-hero .enum{font-size:36px; font-weight:800; color:var(--good-fg); font-family:'IBM Plex Mono',monospace;}
+  .earnings-hero .elbl{font-size:9.5px; text-transform:uppercase; color:var(--steel); letter-spacing:0.06em; font-family:'IBM Plex Mono',monospace;}
+
+  /* Interactive Canvas/SVG Map styles */
+  .interactive-map{
+    width:100%; aspect-ratio:16/10; border-radius:10px; overflow:hidden; background:#E5E1D5;
+    border:1px solid #C9C6BC; position:relative; margin-bottom:12px; box-shadow:inset 0 1px 3px rgba(0,0,0,0.1);
+  }
+  .map-canvas{width:100%; height:100%; display:block;}
+
+  /* OBD Radar animation */
+  .radar-box{
+    width:100%; aspect-ratio:16/10; border-radius:10px; background:#121415; position:relative;
+    overflow:hidden; display:flex; align-items:center; justify-content:center; margin-bottom:14px;
+    border:1px solid var(--line);
+  }
+  .radar-sweep{
+    position:absolute; width:180px; height:180px; border-radius:50%;
+    border:1px solid rgba(227,160,8,0.3); box-shadow:0 0 15px rgba(227,160,8,0.2);
+    animation:radarPing 2s infinite ease-out;
+  }
+  @keyframes radarPing{0%{transform:scale(0.2); opacity:1;} 100%{transform:scale(1.8); opacity:0;}}
+  .radar-hub{width:14px; height:14px; border-radius:50%; background:var(--amber); z-index:2; box-shadow:0 0 10px var(--amber);}
+
+  /* Toast notification */
+  .toast{
+    position:fixed; bottom:24px; left:50%; transform:translateX(-50%);
+    background:#1B1E1F; color:var(--amber); border:1px solid var(--amber);
+    padding:10px 20px; border-radius:24px; font-size:12px; font-weight:700;
+    box-shadow:0 10px 25px rgba(0,0,0,0.5); z-index:999; display:none; animation:toastIn 0.2s ease;
+  }
+  @keyframes toastIn{from{bottom:10px; opacity:0;} to{bottom:24px; opacity:1;}}
+
+  /* Modal overlay */
+  .modal-backdrop{
+    display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:500;
+    align-items:center; justify-content:center; padding:16px; backdrop-filter:blur(3px);
+  }
+  .modal-box{
+    background:#fff; color:var(--graphite); border-radius:14px; padding:22px 20px;
+    max-width:380px; width:100%; box-shadow:0 20px 40px rgba(0,0,0,0.4); animation:modalIn 0.25s ease;
+  }
+  @keyframes modalIn{from{transform:scale(0.95); opacity:0;} to{transform:scale(1); opacity:1;}}
+
+  /* Mobile menu */
+  .hamburger{
+    display:none; position:fixed; bottom:20px; right:20px; z-index:200; width:44px; height:44px;
+    background:var(--amber); color:var(--graphite); border-radius:50%; cursor:pointer;
+    align-items:center; justify-content:center; box-shadow:0 4px 15px rgba(0,0,0,0.5); font-size:20px; font-weight:900;
+  }
+  .sidebar-backdrop{display:none;}
+
+  @media(max-width:960px){
+    .hamburger{display:flex;}
+    .sidebar{
+      position:fixed; top:46px; left:0; height:calc(100vh - 46px); z-index:150; width:270px;
+      transform:translateX(-100%); transition:transform 0.25s ease; box-shadow:10px 0 30px rgba(0,0,0,0.6);
+    }
+    .sidebar.open{transform:translateX(0);}
+    .sidebar-backdrop.open{display:block; position:fixed; inset:0; top:46px; background:rgba(0,0,0,0.5); z-index:140;}
+    .stage{padding:20px 10px 80px;}
+    .stage-row{flex-direction:column; align-items:center; gap:20px;}
+    .phone{width:min(410px, 96vw);}
+    .deck-panel{width:min(410px, 96vw); padding-top:0;}
+  }
+</style>
+</head>
+<body>
+
+<!-- TOP CONTROL BAR -->
+<div class="top-control-bar">
+  <div class="top-left">
+    <div class="os-badge">
+      <span class="dot-live"></span>
+      <span class="display" style="font-size:14px; letter-spacing:0.06em;">Street Code OS</span>
+      <span class="mono" style="color:var(--amber); font-size:10px; margin-left:2px;">v2.4 Core</span>
+    </div>
+  </div>
+  <div class="top-right">
+    <div class="view-mode-selector">
+      <button class="view-btn active" data-vmode="deck" title="Investor Presentation Mode">Split Deck</button>
+      <button class="view-btn" data-vmode="mobile" title="Mobile Frame View">Phone Only</button>
+      <button class="view-btn" data-vmode="console" title="Civic Operations Console">Civic Console</button>
+    </div>
+    <select class="curr-picker" id="currSelect" title="Multi-Currency Engine">
+      <option value="GMD">GMD (Dalasi)</option>
+      <option value="USD">USD ($)</option>
+      <option value="EUR">EUR (€)</option>
+      <option value="GBP">GBP (£)</option>
+    </select>
+    <button class="quick-pill" onclick="StreetCodeStore.resetDemoData()" title="Reset all data to factory demo">Reset Data</button>
+  </div>
+</div>
+
+<!-- NATIONWIDE STOLEN ALERT BANNER (ACTIVATED ACROSS CIVIC & CONSUMER) -->
+<div id="nationwideAlert">
+  <div style="display:flex; align-items:center; gap:10px;">
+    <span style="font-size:18px;">🚨</span>
+    <div>
+      <b style="letter-spacing:0.04em;">NATIONWIDE LAW ENFORCEMENT STOLEN ALERT ACTIVE:</b>
+      <span id="stolenAlertDesc" style="font-weight:400; margin-left:4px;">2019 Toyota Land Cruiser Prado (BJL 4471) — Stolen at Senegambia Strip</span>
+    </div>
+  </div>
+  <button class="btn small" style="background:#fff; color:#8B0000; font-weight:800; border:none; flex:none;" onclick="activateScreen('stolenalerts')">View Alert Feed</button>
+</div>
+
+<!-- FLOATING MOBILE TOGGLE -->
+<div class="hamburger" id="hamburger">☰</div>
+<div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+<div class="app">
+  <!-- SIDEBAR NAVIGATION -->
+  <div class="sidebar" data-mode="consumer" id="mainSidebar">
+    <div class="brandmark" style="flex-direction:column; align-items:flex-start; gap:2px; padding-bottom:14px;">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span class="plate">&lt;/&gt;</span>
+        <span class="name">STREET CODE</span>
+      </div>
+      <span class="sub">What runs the city, built like the street runs it</span>
+    </div>
+
+    <div class="app-switch">
+      <div class="app-switch-btn active" data-app="consumer">Street Code</div>
+      <div class="app-switch-btn" data-app="civic">Civic Platform</div>
+    </div>
+
+    <!-- CONSUMER PILLARS -->
+    <div class="pillar-group" data-app="consumer">
+      <div class="pillar-title">Get Started</div>
+      <div class="nav-item" data-target="signup"><span class="dot"></span>Choose Account Type</div>
+      <div class="nav-item nav-secondary" data-target="verify"><span class="dot"></span>Garage Verification</div>
+    </div>
+
+    <div class="pillar-group" data-app="consumer">
+      <div class="pillar-title">Vehicle Backbone</div>
+      <div class="nav-item active" data-target="garage"><span class="dot"></span>Personal Garage</div>
+      <div class="nav-item nav-secondary" data-target="garageempty"><span class="dot"></span>Personal Garage (Empty)</div>
+      <div class="nav-item" data-target="passport"><span class="dot"></span>Vehicle Passport</div>
+      <div class="nav-item" data-target="addvehicle"><span class="dot"></span>Add a Vehicle</div>
+      <div class="nav-item nav-secondary" data-target="reportstolen"><span class="dot"></span>Report Stolen / Missing</div>
+    </div>
+
+    <div class="pillar-group" data-app="consumer">
+      <div class="pillar-title">Insurance & Protection</div>
+      <div class="nav-item" data-target="insurance"><span class="dot"></span>Vehicle Insurance</div>
+      <div class="nav-item nav-secondary" data-target="compareinsurers"><span class="dot"></span>Compare Insurers</div>
+      <div class="nav-item nav-secondary" data-target="protection"><span class="dot"></span>Marketplace Protection</div>
+      <div class="nav-item nav-secondary" data-target="claim"><span class="dot"></span>File a Claim</div>
+    </div>
+
+    <div class="pillar-group" data-app="consumer">
+      <div class="pillar-title">Garage Marketplace</div>
+      <div class="nav-item" data-target="findgarage"><span class="dot"></span>Find a Garage</div>
+      <div class="nav-item" data-target="request"><span class="dot"></span>Request a Job</div>
+      <div class="nav-item nav-secondary" data-target="gigs"><span class="dot"></span>Browse Gigs (Mechanic)</div>
+      <div class="nav-item" data-target="jobcard"><span class="dot"></span>Garage Job Card</div>
+      <div class="nav-item nav-secondary" data-target="messages"><span class="dot"></span>Messages</div>
+      <div class="nav-item nav-secondary" data-target="review"><span class="dot"></span>Leave a Review</div>
+    </div>
+
+    <div class="pillar-group" data-app="consumer">
+      <div class="pillar-title">Parts Sourcing</div>
+      <div class="nav-item nav-secondary" data-target="partsearch"><span class="dot"></span>Search & Filter</div>
+      <div class="nav-item" data-target="parts"><span class="dot"></span>Parts Catalog</div>
+      <div class="nav-item nav-secondary" data-target="checkout"><span class="dot"></span>Checkout</div>
+    </div>
+
+    <div class="pillar-group" data-app="consumer">
+      <div class="pillar-title">Diagnostics & Tools</div>
+      <div class="nav-item" data-target="scantool"><span class="dot"></span>Connect Scan Tool</div>
+      <div class="nav-item" data-target="faultcodes"><span class="dot"></span>Fault Codes & Mileage</div>
+    </div>
+
+    <div class="pillar-group" data-app="consumer">
+      <div class="pillar-title">Mobility</div>
+      <div class="nav-item nav-secondary" data-target="browsemobility"><span class="dot"></span>Browse Vehicles</div>
+      <div class="nav-item" data-target="mobility"><span class="dot"></span>Book a Vehicle</div>
+      <div class="nav-item nav-secondary" data-target="confirmed"><span class="dot"></span>Booking Confirmed</div>
+      <div class="nav-item" data-target="riderequest"><span class="dot"></span>Driver: Incoming Ride</div>
+      <div class="nav-item nav-secondary" data-target="tripprogress"><span class="dot"></span>Driver: Trip in Progress</div>
+      <div class="nav-item nav-secondary" data-target="tripearnings"><span class="dot"></span>Driver: Trip Complete</div>
+    </div>
+
+    <div class="pillar-group" data-app="consumer">
+      <div class="pillar-title">Vehicle Sales Marketplace</div>
+      <div class="nav-item" data-target="browselistings"><span class="dot"></span>Browse Listings</div>
+      <div class="nav-item" data-target="listvehicle"><span class="dot"></span>List My Vehicle</div>
+      <div class="nav-item nav-secondary" data-target="dealerinventory"><span class="dot"></span>Dealer Inventory</div>
+    </div>
+
+    <div class="pillar-group" data-app="consumer">
+      <div class="pillar-title">Utilities & Services</div>
+      <div class="nav-item" data-target="services"><span class="dot"></span>Fuel, Charging & Services</div>
+      <div class="nav-item nav-secondary" data-target="routes"><span class="dot"></span>Routes & Navigation</div>
+    </div>
+
+    <div class="pillar-group" data-app="consumer">
+      <div class="pillar-title">Personal Collection & Car Culture</div>
+      <div class="nav-item" data-target="culture"><span class="dot"></span>Feed</div>
+      <div class="nav-item" data-target="collection"><span class="dot"></span>My Collection</div>
+      <div class="nav-item nav-secondary" data-target="pubprofile"><span class="dot"></span>Collection Profile (Public)</div>
+      <div class="nav-item nav-secondary" data-target="event"><span class="dot"></span>Event Detail</div>
+    </div>
+
+    <div class="pillar-group" data-app="consumer">
+      <div class="pillar-title">Account & Infrastructure</div>
+      <div class="nav-item" data-target="notifications"><span class="dot"></span>Notifications</div>
+      <div class="nav-item" data-target="payments"><span class="dot"></span>Payments & Payouts</div>
+      <div class="nav-item nav-secondary" data-target="paymethods"><span class="dot"></span>Payment Methods</div>
+      <div class="nav-item" data-target="settings"><span class="dot"></span>Settings</div>
+    </div>
+
+    <!-- CIVIC PILLARS -->
+    <div class="pillar-group" data-app="civic">
+      <div class="pillar-title">Fleet & Driver Ops</div>
+      <div class="nav-item" data-target="fleet"><span class="dot"></span>Fleet Dashboard</div>
+      <div class="nav-item nav-secondary" data-target="staff"><span class="dot"></span>Staff & Drivers</div>
+      <div class="nav-item nav-secondary" data-target="tracking"><span class="dot"></span>Pulse — Live Tracking</div>
+      <div class="nav-item nav-secondary" data-target="capacity"><span class="dot"></span>Vehicle Capacity Board</div>
+      <div class="nav-item nav-secondary" data-target="dispatch"><span class="dot"></span>Dispatch & Authorize</div>
+    </div>
+
+    <div class="pillar-group" data-app="civic">
+      <div class="pillar-title">Platform Admin</div>
+      <div class="nav-item" data-target="adminqueue"><span class="dot"></span>Verification Queue</div>
+      <div class="nav-item nav-secondary" data-target="admindispute"><span class="dot"></span>Dispute Resolution</div>
+      <div class="nav-item nav-secondary" data-target="appeals"><span class="dot"></span>Appeals & Overrides</div>
+      <div class="nav-item nav-secondary" data-target="auditlog"><span class="dot"></span>Audit Log</div>
+    </div>
+
+    <div class="pillar-group" data-app="civic">
+      <div class="pillar-title">Law Enforcement Access</div>
+      <div class="nav-item" data-target="policelookup"><span class="dot"></span>Plate / VIN Lookup</div>
+      <div class="nav-item" data-target="stolenalerts"><span class="dot"></span>Stolen Vehicle Alerts</div>
+      <div class="nav-item nav-secondary" data-target="roadside"><span class="dot"></span>Roadside Verification</div>
+      <div class="nav-item nav-secondary" data-target="violation"><span class="dot"></span>Violation Resolution</div>
+    </div>
+  </div>
+
+  <!-- STAGE (PHONE + DECK) -->
+  <div class="stage">
+    <div class="sibling-nav" id="siblingNav"></div>
+    <div class="stage-row">
+
+      <!-- PHONE SIMULATOR -->
+      <div class="phone">
+        <div class="notch"></div>
+
+        <!-- 1. SIGN UP: CHOOSE ACCOUNT TYPE -->
+        <div class="screen" id="signup">
+          <div class="app-header"><div><div class="eyebrow">Welcome</div><h1>What brings you here?</h1></div></div>
+          <div class="role-card sel" onclick="selectRoleCard(this, 'owner')"><div class="ricon">🚗</div><div><div class="rname">Vehicle Owner</div><div class="rsub">Track service, book repairs, hire out your car</div></div></div>
+          <div class="role-card" onclick="selectRoleCard(this, 'collector')"><div class="ricon">🏆</div><div><div class="rname">Collector / Enthusiast</div><div class="rsub">Manage a collection, join car culture</div></div></div>
+          <div class="role-card" onclick="selectRoleCard(this, 'fleet')"><div class="ricon">🚚</div><div><div class="rname">Fleet Company</div><div class="rsub">Manage multiple vehicles and drivers</div></div></div>
+          <div class="role-card" onclick="selectRoleCard(this, 'garage')"><div class="ricon">🔧</div><div><div class="rname">Garage / Mechanic</div><div class="rsub">Take jobs, manage a shop, or freelance</div></div></div>
+          <div class="role-card" onclick="selectRoleCard(this, 'parts')"><div class="ricon">📦</div><div><div class="rname">Parts Supplier</div><div class="rsub">List inventory, fulfil orders</div></div></div>
+          <div class="role-card" onclick="selectRoleCard(this, 'driver')"><div class="ricon">🧭</div><div><div class="rname">Driver</div><div class="rsub">Offer rides, hire, or chauffeur services</div></div></div>
+          <div class="role-card" onclick="selectRoleCard(this, 'dealer')"><div class="ricon">🏢</div><div><div class="rname">Dealership</div><div class="rsub">List and sell vehicles from your inventory</div></div></div>
+          <div class="role-card" onclick="selectRoleCard(this, 'rental')"><div class="ricon">🔑</div><div><div class="rname">Rental Company</div><div class="rsub">List a fleet for daily hire or long-term lease</div></div></div>
+          <div class="role-card" onclick="selectRoleCard(this, 'broker')"><div class="ricon">📋</div><div><div class="rname">Insurance Broker</div><div class="rsub">Compare and place cover across multiple insurers</div></div></div>
+          <div class="action-row"><div class="btn primary" onclick="activateScreen('garage')">Continue as Vehicle Owner</div></div>
+        </div>
+
+        <!-- 2. GARAGE VERIFICATION (KYC) -->
+        <div class="screen" id="verify">
+          <div class="app-header"><div><div class="eyebrow">Garage / Mechanic Setup</div><h1>Verify Your Business</h1></div></div>
+          <div class="field"><label>Business name</label><input type="text" id="verifyBizName" value="Timbooba Motors"></div>
+          <div class="field"><label>Business registration / license no.</label><input type="text" id="verifyBizReg" value="GM-2026-04471"></div>
+          <div class="field"><label>Specialties</label><div class="input-like" style="color:var(--steel);">Brakes, Diagnostics, Suspension</div></div>
+          <div class="field"><label>Upload documents</label></div>
+          <div class="scan-box" onclick="showToast('📄 Business license document attached')">📄 Business license<br><span style="color:var(--steel-lt)">Tap to upload (Verified PDF)</span></div>
+          <div class="scan-box" onclick="showToast('🪪 Owner National ID attached')">🪪 Owner ID (National ID / Passport)</div>
+          <div class="section-label">Status</div>
+          <div class="card"><div class="row"><span class="k">Review time</span><span class="v">Usually under 48 hrs</span></div></div>
+          <div class="action-row"><div class="btn primary" onclick="submitKYC()">Submit for Review</div></div>
+        </div>
+
+        <!-- 3. PERSONAL GARAGE -->
+        <div class="screen active" id="garage">
+          <div class="app-header">
+            <div><div class="eyebrow">Good morning, Kaabu</div><h1>My Garage</h1></div>
+            <div class="avatar" onclick="activateScreen('settings')">KC</div>
+          </div>
+          <div id="garageVehicleList">
+            <!-- Rendered reactively from Store -->
+          </div>
+          <div class="stat-strip">
+            <div class="stat"><div class="num" id="statVehiclesCount">2</div><div class="lbl">Vehicles</div></div>
+            <div class="stat"><div class="num" id="statDueCount">1</div><div class="lbl">Due Soon</div></div>
+            <div class="stat"><div class="num money" data-gmd="0">D0</div><div class="lbl">Open Jobs</div></div>
+          </div>
+          <div class="section-label">Quick actions</div>
+          <div class="action-row"><div class="btn primary" onclick="activateScreen('scantool')">Log Mileage (OBD-II)</div><div class="btn ghost" onclick="activateScreen('request')">Request Job</div></div>
+          <div class="action-row"><div class="btn ghost" onclick="activateScreen('addvehicle')">Add Vehicle</div><div class="btn ghost" onclick="activateScreen('collection')">Personal Collection</div></div>
+          <div class="action-row"><div class="btn ghost" style="border-color:var(--rust); color:var(--rust);" onclick="activateScreen('reportstolen')">🚨 Report Vehicle Stolen / Missing</div></div>
+        </div>
+
+        <!-- 4. PERSONAL GARAGE (EMPTY STATE) -->
+        <div class="screen" id="garageempty">
+          <div class="app-header"><div><div class="eyebrow">Good morning, new user</div><h1>My Garage</h1></div><div class="avatar">NU</div></div>
+          <div class="scan-box" style="padding:40px 18px;">🚗<br><br><b style="color:var(--graphite);">No vehicles yet</b><br>Add your first vehicle by VIN to start building its service history — even a used car with no prior records here begins its trusted history the day you add it.</div>
+          <div class="action-row"><div class="btn primary" onclick="activateScreen('addvehicle')">Add a Vehicle</div></div>
+          <div class="section-label">Or explore first</div>
+          <div class="action-row"><div class="btn ghost" onclick="activateScreen('findgarage')">Find a Garage Nearby</div></div>
+          <div class="action-row"><div class="btn ghost" onclick="activateScreen('culture')">Browse Car Culture</div></div>
+        </div>
+
+        <!-- 5. VEHICLE PASSPORT -->
+        <div class="screen" id="passport">
+          <div class="app-header"><div><div class="eyebrow">Public vehicle record</div><h1>Vehicle Passport</h1></div></div>
+          <div class="vin-plate">
+            <div class="make-model" id="passMakeModel">2019 Toyota Land Cruiser Prado TX</div>
+            <div class="meta-row"><div><b id="passMileage">41,205 mi</b>Current mileage</div><div><b>2 owners</b>Ownership</div></div>
+            <div class="vin-row"><span id="passVin">JTMHY7AJXK4X2091</span><span>Verified ✓</span></div>
+          </div>
+          <div class="section-label">Ownership history</div>
+          <div class="timeline-item"><div class="dot2"></div><div class="body"><div class="title">Kaabu Corp (current)</div><div class="sub">Since Mar 2023 · Banjul</div></div></div>
+          <div class="timeline-item"><div class="dot2" style="background:var(--steel-lt)"></div><div class="body"><div class="title">First owner</div><div class="sub">2019 – 2023 · Dealer import</div></div></div>
+          <div class="timeline-item"><div class="dot2" style="background:var(--steel-lt)"></div><div class="body"><div class="title">Cleared through Gambia Ports Authority, Banjul</div><div class="sub">2019 · Import duty paid to GRA, clearing agent: Kombo Freight Services</div></div></div>
+          <div class="section-label">Registration & road tax (GRA)</div>
+          <div class="card">
+            <div class="row"><span class="k">Registration status</span><span class="v" style="color:var(--good-fg);">Current</span></div>
+            <div class="row"><span class="k">Road tax</span><span class="v" style="color:var(--good-fg);">Paid through Dec 2026</span></div>
+            <div class="row"><span class="k">Import duty</span><span class="v">Cleared, GRA ref. GRA-2019-77281</span></div>
+          </div>
+          <div class="section-label">Service history (Immutable Ledger)</div>
+          <div id="passportServiceTimeline">
+            <!-- Injected from store -->
+          </div>
+          <div class="action-row"><div class="btn ghost" onclick="showToast('GRA Road Tax portal opened')">Renew Road Tax (GRA)</div><div class="btn primary" onclick="copyPassportLink()">Share Passport Link</div></div>
+        </div>
+
+        <!-- 6. ADD A VEHICLE -->
+        <div class="screen" id="addvehicle">
+          <div class="app-header"><div><div class="eyebrow">Vehicle Backbone</div><h1>Add a Vehicle</h1></div></div>
+          <div class="scan-box" onclick="simulateVinOcrScan()">📷 Tap to Scan VIN Plate / Windshield Sticker<br><span style="color:var(--steel-lt)">or enter 17-digit VIN below</span></div>
+          <div class="field"><label>VIN</label><input type="text" id="newVinInput" placeholder="e.g. JTMHY7AJXK4X2091" value="JTMHY7AJXK4X2091" oninput="decodeVin(this.value)"></div>
+          <div class="section-label">Decoded from VIN</div>
+          <div class="card">
+            <div class="row"><span class="k">Make / Model</span><span class="v" id="decMake">Toyota Land Cruiser</span></div>
+            <div class="row"><span class="k">Year</span><span class="v" id="decYear">2019</span></div>
+            <div class="row"><span class="k">Trim</span><span class="v" id="decTrim">Prado TX</span></div>
+            <div class="row"><span class="k">Engine</span><span class="v" id="decEngine">2.8L Turbo Diesel</span></div>
+          </div>
+          <div class="field"><label>Current mileage (mi)</label><input type="text" id="newMileageInput" placeholder="41,205" value="41,205"></div>
+          <div class="action-row"><div class="btn primary" onclick="submitAddVehicle()">Add to My Garage</div></div>
+        </div>
+
+        <!-- 7. REPORT VEHICLE STOLEN / MISSING -->
+        <div class="screen" id="reportstolen">
+          <div class="app-header"><div><div class="eyebrow">Vehicle Backbone</div><h1>Report Stolen / Missing</h1></div></div>
+          <div class="cover-badge" style="background:var(--bad-bg); color:var(--bad-fg);">This broadcasts nationwide the moment you submit</div>
+          <div class="field"><label>Vehicle</label><div class="input-like" style="color:var(--steel);">2019 Toyota Land Cruiser — BJL 4471</div></div>
+          <div class="field"><label>Last seen location</label><input type="text" id="stolenLocation" placeholder="e.g. Senegambia Strip, Kololi" value="Senegambia Strip, Kololi"></div>
+          <div class="field"><label>Date & time last seen</label><input type="text" id="stolenTime" placeholder="Today, 6:30 PM" value="Today, 6:30 PM"></div>
+          <div class="field"><label>What happened?</label></div>
+          <textarea class="review-box" id="stolenDetails" placeholder="Parked outside, gone within an hour…">Parked outside restaurant on Senegambia strip. Returned 45 minutes later and vehicle was gone.</textarea>
+          <div class="scan-box" onclick="showToast('Photo evidence attached to police dispatch')">📷 Add a recent photo if you have one</div>
+          <div class="action-row"><div class="btn primary" style="background:#B22222;" onclick="submitStolenReport()">Submit Nationwide Alert</div></div>
+        </div>
+
+        <!-- 8. VEHICLE INSURANCE -->
+        <div class="screen" id="insurance">
+          <div class="app-header"><div><div class="eyebrow">Insurance & Protection</div><h1>Vehicle Insurance</h1></div></div>
+          <div class="cover-badge">✓ Active coverage</div>
+          <div class="paycard">
+            <div class="pcrow"><span>Provider</span><span>GAMSTAR Insurance</span></div>
+            <div class="pcnum">POL-2026-88413</div>
+            <div class="pcrow"><span>Vehicle</span><span>Land Cruiser · ...4X2091</span></div>
+          </div>
+          <div class="card">
+            <div class="row"><span class="k">Coverage type</span><span class="v">Comprehensive</span></div>
+            <div class="row"><span class="k">Expires</span><span class="v">Dec 14, 2026</span></div>
+            <div class="row"><span class="k">Premium</span><span class="v money" data-gmd="2400">D2,400/mo</span></div>
+            <div class="row"><span class="k">Linked to passport</span><span class="v">Yes ✓</span></div>
+          </div>
+          <div class="action-row"><div class="btn ghost" onclick="showToast('Policy PDF downloaded')">View Policy PDF</div><div class="btn primary" onclick="activateScreen('compareinsurers')">Compare Other Insurers</div></div>
+        </div>
+
+        <!-- 9. COMPARE INSURERS (BROKER) -->
+        <div class="screen" id="compareinsurers">
+          <div class="app-header"><div><div class="eyebrow">Insurance & Protection</div><h1>Compare Insurers</h1></div></div>
+          <div class="quote" onclick="selectInsurer('IGI Gamstar', 2400)">
+            <div class="top"><span class="shop">IGI Gamstar</span><span class="price money" data-gmd="2400">D2,400/mo</span></div>
+            <div class="meta">Comprehensive · fast claims reputation</div>
+          </div>
+          <div class="quote" onclick="selectInsurer('GNIC', 2150)">
+            <div class="top"><span class="shop">GNIC</span><span class="price money" data-gmd="2150">D2,150/mo</span></div>
+            <div class="meta">Comprehensive · nationwide branches</div>
+          </div>
+          <div class="quote" onclick="selectInsurer('Capital Express', 1980)">
+            <div class="top"><span class="shop">Capital Express Assurance</span><span class="price money" data-gmd="1980">D1,980/mo</span></div>
+            <div class="meta">Third-party plus · budget option</div>
+          </div>
+          <div style="font-size:10px; color:var(--steel); margin:4px 0 0; line-height:1.5;">Quotes pulled through a licensed broker partner: you choose, we don't push one insurer over another.</div>
+          <div class="action-row"><div class="btn primary" onclick="showToast('Insurer quote accepted! Transferring to policy binder.')">Select & Continue</div></div>
+        </div>
+
+        <!-- 10. MARKETPLACE PROTECTION -->
+        <div class="screen" id="protection">
+          <div class="app-header"><div><div class="eyebrow">Insurance & Protection</div><h1>Marketplace Protection</h1></div></div>
+          <div class="cover-badge">✓ This transaction is protected</div>
+          <div class="card">
+            <div class="row"><span class="k">Repair jobs</span><span class="v money" data-gmd="140000">Covered up to D140,000</span></div>
+            <div class="row"><span class="k">Mobility bookings</span><span class="v money" data-gmd="350000">Covered up to D350,000</span></div>
+            <div class="row"><span class="k">Ride trips</span><span class="v">Third-party liability included</span></div>
+          </div>
+          <div class="section-label">How it works</div>
+          <div class="timeline-item"><div class="dot2"></div><div class="body"><div class="title">Funds held in escrow</div><div class="sub">Released only once you confirm the job or trip is done right</div></div></div>
+          <div class="timeline-item"><div class="dot2"></div><div class="body"><div class="title">Damage or dispute?</div><div class="sub">File a claim — average resolution in 3 days</div></div></div>
+          <div class="action-row"><div class="btn primary" onclick="activateScreen('claim')">File a Claim</div></div>
+        </div>
+
+        <!-- 11. FILE A CLAIM -->
+        <div class="screen" id="claim">
+          <div class="app-header"><div><div class="eyebrow">Insurance & Protection</div><h1>File a Claim</h1></div></div>
+          <div class="field"><label>Related to</label><div class="input-like" style="color:var(--steel);">Booking #BK-1042 — Honda CR-V</div></div>
+          <div class="field"><label>Incident type</label><div class="input-like" style="color:var(--steel);">Damage / Accident</div></div>
+          <div class="field"><label>Date of incident</label><input type="text" value="Aug 4, 2026"></div>
+          <div class="field"><label>What happened?</label></div>
+          <textarea class="review-box" placeholder="Describe what happened…">Vehicle rear bumper scraped while parked at Senegambia strip.</textarea>
+          <div class="scan-box" onclick="showToast('Photo of scratch attached')">📷 Upload photos of the damage</div>
+          <div class="action-row"><div class="btn primary" onclick="submitClaim()">Submit Claim</div></div>
+        </div>
+
+        <!-- 12. FLEET DASHBOARD -->
+        <div class="screen" id="fleet">
+          <div class="app-header"><div><div class="eyebrow">SBR Logistics Fleet</div><h1>Fleet Dashboard</h1></div><div class="avatar">SBR</div></div>
+          <div class="stat-strip">
+            <div class="stat"><div class="num">14</div><div class="lbl">Vehicles</div></div>
+            <div class="stat"><div class="num" style="color:var(--warn-fg);">2</div><div class="lbl">Compliance</div></div>
+            <div class="stat"><div class="num money" data-gmd="224000">D224K</div><div class="lbl">Month Cost</div></div>
+          </div>
+          <div class="section-label">Vehicles Status</div>
+          <div class="flist">
+            <div class="frow" onclick="activateScreen('tracking')"><div><div class="name">Truck 04 — Isuzu NPR</div><div class="driver">Driver: A. Jallow</div></div><div class="flag" style="background:var(--good-bg); color:var(--good-fg);">Active</div></div>
+            <div class="frow"><div><div class="name">Van 11 — Hiace</div><div class="driver">Driver: M. Ceesay</div></div><div class="flag" style="background:var(--warn-bg); color:var(--warn-fg);">Insurance due</div></div>
+            <div class="frow"><div><div class="name">Sedan 02 — Corolla</div><div class="driver">Unassigned</div></div><div class="flag" style="background:var(--bad-bg); color:var(--bad-fg);">In shop</div></div>
+            <div class="frow"><div><div class="name">Truck 07 — Isuzu NPR</div><div class="driver">Driver: S. Bah</div></div><div class="flag" style="background:var(--good-bg); color:var(--good-fg);">Active</div></div>
+          </div>
+          <div class="section-label">Compliance alerts</div>
+          <div class="card">
+            <div class="row"><span class="k">Van 11 — insurance expires</span><span class="v" style="color:var(--warn-fg);">3 days</span></div>
+            <div class="row"><span class="k">Sedan 02 — inspection overdue</span><span class="v" style="color:var(--bad-fg);">7 days</span></div>
+          </div>
+          <div class="action-row"><div class="btn ghost" onclick="activateScreen('staff')">Manage Staff</div><div class="btn primary" onclick="activateScreen('dispatch')">Authorize Dispatch</div></div>
+        </div>
+
+        <!-- 13. STAFF & DRIVERS -->
+        <div class="screen" id="staff">
+          <div class="app-header"><div><div class="eyebrow">SBR Logistics Fleet</div><h1>Staff & Drivers</h1></div></div>
+          <div class="stat-strip">
+            <div class="stat"><div class="num">9</div><div class="lbl">Drivers</div></div>
+            <div class="stat"><div class="num" style="color:var(--warn-fg);">1</div><div class="lbl">License Exp.</div></div>
+            <div class="stat"><div class="num">2</div><div class="lbl">Unassigned</div></div>
+          </div>
+          <div class="section-label">Team Roster</div>
+          <div class="driver-row" style="background:#F4F2EC; border:1px solid #DAD6C9; border-radius:8px; padding:9px 12px; display:flex; align-items:center; gap:10px; margin-bottom:8px;">
+            <div class="avatar" style="width:30px; height:30px;">AJ</div>
+            <div><div style="font-size:12px; font-weight:700;">A. Jallow</div><div style="font-size:10px; color:var(--steel);">Truck 04 · License valid to 2028</div></div>
+            <div style="margin-left:auto; font-size:9px; font-weight:700; padding:2px 7px; border-radius:20px; background:var(--good-bg); color:var(--good-fg);">Active</div>
+          </div>
+          <div class="driver-row" style="background:#F4F2EC; border:1px solid #DAD6C9; border-radius:8px; padding:9px 12px; display:flex; align-items:center; gap:10px; margin-bottom:8px;">
+            <div class="avatar" style="width:30px; height:30px;">MC</div>
+            <div><div style="font-size:12px; font-weight:700;">M. Ceesay</div><div style="font-size:10px; color:var(--steel);">Van 11 · License valid to 2027</div></div>
+            <div style="margin-left:auto; font-size:9px; font-weight:700; padding:2px 7px; border-radius:20px; background:var(--good-bg); color:var(--good-fg);">Active</div>
+          </div>
+          <div class="driver-row" style="background:#F4F2EC; border:1px solid #DAD6C9; border-radius:8px; padding:9px 12px; display:flex; align-items:center; gap:10px; margin-bottom:8px;">
+            <div class="avatar" style="width:30px; height:30px;">SB</div>
+            <div><div style="font-size:12px; font-weight:700;">S. Bah</div><div style="font-size:10px; color:var(--steel);">Truck 07 · License expires in 12 days</div></div>
+            <div style="margin-left:auto; font-size:9px; font-weight:700; padding:2px 7px; border-radius:20px; background:var(--warn-bg); color:var(--warn-fg);">Renew</div>
+          </div>
+          <div class="action-row"><div class="btn primary" onclick="showToast('Driver onboarding invite sent via SMS')">Add Driver</div></div>
+        </div>
+
+        <!-- 14. PULSE — LIVE VEHICLE TRACKING -->
+        <div class="screen" id="tracking">
+          <div class="app-header"><div><div class="eyebrow">Pulse · Truck 04</div><h1>Live Tracking</h1></div></div>
+          <div class="cover-badge" style="background:var(--warn-bg); color:var(--warn-fg);">Required for tenant fleet vehicles during work hours</div>
+          <div class="interactive-map">
+            <svg class="map-canvas" viewBox="0 0 400 240">
+              <path d="M0,40 Q200,60 400,30 M0,120 Q180,140 400,100 M0,200 Q220,180 400,210" stroke="#C9C6BC" stroke-width="6" fill="none"/>
+              <path d="M60,0 Q80,120 70,240 M220,0 Q210,130 230,240 M340,0 Q330,110 350,240" stroke="#C9C6BC" stroke-width="4" fill="none"/>
+              <path d="M80,130 C140,130 180,90 260,70" stroke="#C8501A" stroke-width="4" stroke-dasharray="6,4" fill="none"/>
+              <circle cx="260" cy="70" r="6" fill="#242829"/>
+              <circle id="pulseVehicleDot" cx="190" cy="95" r="7" fill="#C8501A" stroke="#fff" stroke-width="2">
+                <animate attributeName="r" values="7;10;7" dur="1.5s" repeatCount="indefinite"/>
+              </circle>
+              <text x="175" y="82" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#121415" font-weight="700">Truck 04</text>
+            </svg>
+          </div>
+          <div class="speedo" style="display:flex; gap:8px; margin-bottom:12px;">
+            <div class="sbox" style="flex:1; background:var(--graphite); color:#fff; border-radius:9px; padding:10px; text-align:center;">
+              <div class="snum" id="liveSpeedo" style="font-size:22px; font-weight:800; color:var(--amber); font-family:'IBM Plex Mono',monospace;">54</div>
+              <div style="font-size:8px; text-transform:uppercase; color:var(--steel-lt); letter-spacing:0.06em;">km/h</div>
+            </div>
+            <div class="sbox" style="flex:1; background:var(--graphite); color:#fff; border-radius:9px; padding:10px; text-align:center;">
+              <div class="snum" style="font-size:22px; font-weight:800; color:var(--paper); font-family:'IBM Plex Mono',monospace;">12.4</div>
+              <div style="font-size:8px; text-transform:uppercase; color:var(--steel-lt); letter-spacing:0.06em;">km today</div>
+            </div>
+            <div class="sbox" style="flex:1; background:var(--graphite); color:#fff; border-radius:9px; padding:10px; text-align:center;">
+              <div class="snum" style="font-size:16px; font-weight:800; color:var(--good-bg); margin-top:4px;">On route</div>
+              <div style="font-size:8px; text-transform:uppercase; color:var(--steel-lt); letter-spacing:0.06em;">Status</div>
+            </div>
+          </div>
+          <div class="section-label">Current trip</div>
+          <div class="card">
+            <div class="row"><span class="k">Driver</span><span class="v">A. Jallow</span></div>
+            <div class="row"><span class="k">Route</span><span class="v">Depot Banjul → Serrekunda</span></div>
+            <div class="row"><span class="k">ETA</span><span class="v">14 min</span></div>
+            <div class="row"><span class="k">Synced via</span><span class="v">OBD + Bluetooth</span></div>
+          </div>
+          <div class="action-row"><div class="btn ghost" onclick="showToast('Geofence zone verified: Banjul/Kombo')">Geofence Check</div><div class="btn primary" onclick="activateScreen('messages')">Message Driver</div></div>
+        </div>
+
+        <!-- 15. VEHICLE CAPACITY BOARD -->
+        <div class="screen" id="capacity">
+          <div class="app-header"><div><div class="eyebrow">SBR Logistics Fleet</div><h1>Capacity Board</h1></div></div>
+          <div class="stat-strip">
+            <div class="stat"><div class="num" style="color:var(--good-fg);">9</div><div class="lbl">Available</div></div>
+            <div class="stat"><div class="num" style="color:var(--warn-fg);">4</div><div class="lbl">On Mission</div></div>
+            <div class="stat"><div class="num" style="color:var(--bad-fg);">1</div><div class="lbl">In Shop</div></div>
+          </div>
+          <div class="section-label">Live status</div>
+          <div class="cap-row">
+            <div class="ctop"><span class="cname">Truck 04 — Isuzu NPR</span><span class="cflag" style="background:var(--warn-bg); color:var(--warn-fg);">On mission</span></div>
+            <div class="cmeta">Held by A. Jallow · Mission: Serrekunda delivery run<br>Authorized by S. Ceesay (Ops Manager) · Since 9:12 AM</div>
+          </div>
+          <div class="cap-row">
+            <div class="ctop"><span class="cname">Van 11 — Hiace</span><span class="cflag" style="background:var(--good-bg); color:var(--good-fg);">Available</span></div>
+            <div class="cmeta">At depot · Last used by M. Ceesay, returned 6:40 AM</div>
+          </div>
+          <div class="cap-row">
+            <div class="ctop"><span class="cname">Bike 02 — Yamaha</span><span class="cflag" style="background:var(--warn-bg); color:var(--warn-fg);">On mission</span></div>
+            <div class="cmeta">Held by F. Touray · Mission: Parts pickup — Kombo<br>Authorized by S. Ceesay · Since 10:02 AM</div>
+          </div>
+          <div class="cap-row">
+            <div class="ctop"><span class="cname">Sedan 02 — Corolla</span><span class="cflag" style="background:var(--bad-bg); color:var(--bad-fg);">In shop</span></div>
+            <div class="cmeta">At Timbooba Motors · Job #2291</div>
+          </div>
+          <div class="action-row"><div class="btn primary" onclick="activateScreen('dispatch')">Authorize New Dispatch</div></div>
+        </div>
+
+        <!-- 16. DISPATCH & AUTHORIZE -->
+        <div class="screen" id="dispatch">
+          <div class="app-header"><div><div class="eyebrow">Fleet · New Dispatch</div><h1>Authorize Vehicle Use</h1></div></div>
+          <div class="stepper">
+            <div class="step done"><div class="bar"></div><div class="lbl">Requested</div></div>
+            <div class="step current"><div class="bar"></div><div class="lbl">Authorizing</div></div>
+            <div class="step"><div class="bar"></div><div class="lbl">Checked Out</div></div>
+            <div class="step"><div class="bar"></div><div class="lbl">Returned</div></div>
+          </div>
+          <div class="field"><label>Vehicle</label><div class="input-like" style="color:var(--steel);">Van 11 — Toyota Hiace (BJL 2291)</div></div>
+          <div class="field"><label>Requested by</label><div class="input-like" style="color:var(--steel);">F. Touray (Driver ID: #DR-882)</div></div>
+          <div class="field"><label>Mission / purpose</label><input type="text" id="dispMission" placeholder="e.g. Airport pickup — client run" value="Airport pickup — VIP delegation run"></div>
+          <div class="field"><label>Expected return</label><input type="text" id="dispReturn" placeholder="6:00 PM today" value="6:00 PM today"></div>
+          <div class="card"><div class="row"><span class="k">Requires authorization from</span><span class="v">S. Ceesay (Ops Manager)</span></div></div>
+          <div class="action-row"><div class="btn ghost" onclick="showToast('Dispatch request rejected')">Deny</div><div class="btn primary" onclick="submitDispatchAuth()">Authorize & Check Out</div></div>
+        </div>
+
+        <!-- 17. FIND A GARAGE -->
+        <div class="screen" id="findgarage">
+          <div class="app-header"><div><div class="eyebrow">Garage Marketplace</div><h1>Find a Garage</h1></div></div>
+          <div class="interactive-map">
+            <svg class="map-canvas" viewBox="0 0 400 240">
+              <rect width="400" height="240" fill="#E5E1D5"/>
+              <path d="M20,50 Q180,80 380,40 M40,200 Q200,160 360,210" stroke="#DAD6C9" stroke-width="12" fill="none"/>
+              <path d="M120,20 L130,220 M280,20 L270,220" stroke="#DAD6C9" stroke-width="8" fill="none"/>
+              <circle cx="150" cy="110" r="6" fill="#1565C0"/>
+              <g onclick="selectGaragePin('Timbooba Motors', '0.8 mi', '4.9 ★')" style="cursor:pointer;">
+                <circle cx="190" cy="90" r="9" fill="#C8501A"/>
+                <text x="185" y="93" font-size="9" fill="#fff" font-weight="800">🔧</text>
+                <text x="204" y="94" font-size="10" font-weight="700" fill="#121415">Timbooba (0.8 mi)</text>
+              </g>
+              <g onclick="selectGaragePin('Kombo Auto Care', '1.4 mi', '4.6 ★')" style="cursor:pointer;">
+                <circle cx="270" cy="140" r="9" fill="#1B1E1F"/>
+                <text x="265" y="143" font-size="9" fill="#fff">🔧</text>
+                <text x="284" y="144" font-size="10" font-weight="700" fill="#121415">Kombo (1.4 mi)</text>
+              </g>
+            </svg>
+          </div>
+          <div class="search-result" style="background:#F4F2EC; border:1px solid #DAD6C9; border-radius:9px; padding:10px 12px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; cursor:pointer;" onclick="activateScreen('request')">
+            <div><div class="sname" style="font-size:12.5px; font-weight:800;">Timbooba Motors</div><div class="smeta" style="font-size:10px; color:var(--steel);"><span class="stars">★★★★★</span> 4.9 · Brakes, Diagnostics</div></div>
+            <div class="sdist" style="font-size:11px; font-weight:700; color:var(--steel); font-family:'IBM Plex Mono',monospace;">0.8 mi</div>
+          </div>
+          <div class="search-result" style="background:#F4F2EC; border:1px solid #DAD6C9; border-radius:9px; padding:10px 12px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; cursor:pointer;" onclick="activateScreen('request')">
+            <div><div class="sname" style="font-size:12.5px; font-weight:800;">Kombo Auto Care</div><div class="smeta" style="font-size:10px; color:var(--steel);"><span class="stars">★★★★☆</span> 4.6 · Full service</div></div>
+            <div class="sdist" style="font-size:11px; font-weight:700; color:var(--steel); font-family:'IBM Plex Mono',monospace;">1.4 mi</div>
+          </div>
+          <div class="search-result" style="background:#F4F2EC; border:1px solid #DAD6C9; border-radius:9px; padding:10px 12px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; cursor:pointer;" onclick="activateScreen('request')">
+            <div><div class="sname" style="font-size:12.5px; font-weight:800;">Fajara Fast Fix</div><div class="smeta" style="font-size:10px; color:var(--steel);"><span class="stars">★★★★☆</span> 4.4 · Quick turnaround</div></div>
+            <div class="sdist" style="font-size:11px; font-weight:700; color:var(--steel); font-family:'IBM Plex Mono',monospace;">2.1 mi</div>
+          </div>
+          <div class="action-row"><div class="btn primary" onclick="activateScreen('request')">Request a Job Quote</div></div>
+        </div>
+
+        <!-- 18. REQUEST A JOB / COMPARE QUOTES -->
+        <div class="screen" id="request">
+          <div class="app-header"><div><div class="eyebrow">Marketplace · Job #2291</div><h1>Compare Quotes</h1></div></div>
+          <div class="vin-plate" style="margin-bottom:12px;">
+            <div class="make-model">Brake pads + inspection</div>
+            <div class="meta-row"><div><b>Land Cruiser</b>Vehicle</div><div><b>Banjul</b>Location</div></div>
+          </div>
+          <div class="section-label">3 garages quoted</div>
+          <div class="quote" onclick="acceptQuote('Timbooba Motors', 9500)">
+            <div class="top"><span class="shop">Timbooba Motors</span><span class="price money" data-gmd="9500">D9,500</span></div>
+            <div class="meta"><span class="stars">★★★★★</span> 4.9 · 210 jobs · Same-day slot</div>
+          </div>
+          <div class="quote" onclick="acceptQuote('Kombo Auto Care', 10800)">
+            <div class="top"><span class="shop">Kombo Auto Care</span><span class="price money" data-gmd="10800">D10,800</span></div>
+            <div class="meta"><span class="stars">★★★★☆</span> 4.6 · 88 jobs · Tomorrow 9am</div>
+          </div>
+          <div class="quote" onclick="acceptQuote('Fajara Fast Fix', 8400)">
+            <div class="top"><span class="shop">Fajara Fast Fix</span><span class="price money" data-gmd="8400">D8,400</span></div>
+            <div class="meta"><span class="stars">★★★★☆</span> 4.4 · 34 jobs · Thu 2pm</div>
+          </div>
+          <div class="action-row"><div class="btn primary" onclick="acceptQuote('Timbooba Motors', 9500)">Accept Timbooba Motors (D9,500)</div></div>
+        </div>
+
+        <!-- 19. BROWSE GIGS (MECHANIC) -->
+        <div class="screen" id="gigs">
+          <div class="app-header"><div><div class="eyebrow">Mechanic · Freelance</div><h1>Open Gigs Near You</h1></div></div>
+          <div class="role-toggle"><div class="opt on">Nearby</div><div class="opt">Highest Pay</div><div class="opt">Newest</div></div>
+          <div class="gig" style="background:#F4F2EC; border:1px solid #DAD6C9; border-radius:9px; padding:11px; margin-bottom:8px;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+              <span style="font-size:13px; font-weight:800;">Brake inspection + pads</span>
+              <span class="money" data-gmd="9500" style="font-size:14px; font-weight:800; color:var(--rust);">D9,500</span>
+            </div>
+            <div style="font-size:10px; color:var(--steel); margin-top:3px;">Toyota Land Cruiser · Banjul · Posted 20 min ago</div>
+            <div style="margin-top:6px;"><span class="fit-badge">Brakes</span> <span class="fit-badge">Same-day</span></div>
+          </div>
+          <div class="gig" style="background:#F4F2EC; border:1px solid #DAD6C9; border-radius:9px; padding:11px; margin-bottom:8px;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+              <span style="font-size:13px; font-weight:800;">Full service — 40k mile</span>
+              <span class="money" data-gmd="12600" style="font-size:14px; font-weight:800; color:var(--rust);">D12,600</span>
+            </div>
+            <div style="font-size:10px; color:var(--steel); margin-top:3px;">Honda CR-V · Bakau · Posted 1 hr ago</div>
+            <div style="margin-top:6px;"><span class="fit-badge">Full Service</span></div>
+          </div>
+          <div class="action-row"><div class="btn primary" onclick="showToast('Mechanic quote submitted directly to customer!')">Submit a Quote</div></div>
+        </div>
+
+        <!-- 20. GARAGE JOB CARD -->
+        <div class="screen" id="jobcard">
+          <div class="app-header"><div><div class="eyebrow">Timbooba Motors · Job #2291</div><h1>Job Card</h1></div></div>
+          <div class="stepper" id="jobCardStepper">
+            <div class="step done"><div class="bar"></div><div class="lbl">Quoted</div></div>
+            <div class="step done"><div class="bar"></div><div class="lbl">Approved</div></div>
+            <div class="step current" id="jcStepInProgress"><div class="bar"></div><div class="lbl">In Progress</div></div>
+            <div class="step" id="jcStepComplete"><div class="bar"></div><div class="lbl">Complete</div></div>
+          </div>
+          <div class="card">
+            <div class="row"><span class="k">Vehicle</span><span class="v">Toyota Land Cruiser</span></div>
+            <div class="row"><span class="k">VIN</span><span class="v">...4X2091</span></div>
+            <div class="row"><span class="k">Customer</span><span class="v">Kaabu Corp</span></div>
+            <div class="row"><span class="k">Mileage in</span><span class="v">41,205 mi</span></div>
+          </div>
+          <div class="section-label">Diagnostics & Evidence</div>
+          <div style="display:flex; gap:6px; margin-top:8px;">
+            <div class="media-ph" style="flex:1; aspect-ratio:1;"><span class="micon">🚙</span><span class="mlabel">Land Cruiser</span></div>
+            <div class="media-ph" style="flex:1; aspect-ratio:1;"><span class="micon">🛞</span><span class="mlabel">Brake pad</span></div>
+            <div class="media-ph video" style="flex:1; aspect-ratio:1;"><span class="micon">🔧</span><span class="mlabel">Clip</span></div>
+          </div>
+          <div class="section-label">Parts & Labor breakdown</div>
+          <div class="card">
+            <div class="row"><span class="k">Brake pad set (front)</span><span class="v money" data-gmd="4300">D4,300</span></div>
+            <div class="row"><span class="k">Cabin air filter</span><span class="v money" data-gmd="1250">D1,250</span></div>
+            <div class="row"><span class="k">Labor — 2.5 hrs</span><span class="v money" data-gmd="3950">D3,950</span></div>
+            <div class="row" style="border-top:1px solid #DAD6C9; margin-top:4px; padding-top:6px;"><span class="k">Total Quoted</span><span class="v money" data-gmd="9500" style="color:var(--rust); font-weight:800;">D9,500</span></div>
+          </div>
+          <div class="action-row"><div class="btn ghost" onclick="activateScreen('messages')">Message Customer</div><div class="btn primary" id="btnMarkJobComplete" onclick="completeJobCardFloor()">Mark Complete & Write to Passport</div></div>
+        </div>
+
+        <!-- 21. MESSAGES -->
+        <div class="screen" id="messages">
+          <div class="app-header"><div><div class="eyebrow">Job #2291 · Active Thread</div><h1>Timbooba Motors</h1></div></div>
+          <div class="chat-thread" id="chatThreadList">
+            <div class="bubble them">Hi Kaabu, we've inspected the Land Cruiser — brake pads are worn but rotors look fine.</div>
+            <div class="chat-time">10:12 AM</div>
+            <div class="bubble me">Good to hear. Go ahead with the pad replacement.</div>
+            <div class="bubble them">On it. Should be done by 4pm today, we'll send photos before closing the job.</div>
+            <div class="chat-time">10:15 AM</div>
+          </div>
+          <div class="chat-input">
+            <input type="text" id="chatMsgInput" placeholder="Type a message…" onkeypress="if(event.key==='Enter')sendChatMessage()">
+            <div class="btn primary small" style="flex:none; padding:7px 12px;" onclick="sendChatMessage()">Send</div>
+          </div>
+        </div>
+
+        <!-- 22. LEAVE A REVIEW -->
+        <div class="screen" id="review">
+          <div class="app-header"><div><div class="eyebrow">Job #2291 · Complete</div><h1>Rate Timbooba Motors</h1></div></div>
+          <div class="vin-plate" style="margin-bottom:6px;">
+            <div class="make-model">Brake pads + inspection</div>
+            <div class="meta-row"><div><b class="money" data-gmd="9500">D9,500</b>Final cost</div><div><b>Same day</b>Turnaround</div></div>
+          </div>
+          <div class="star-row" id="starRowRating">
+            <span class="on" onclick="setRating(1)">★</span>
+            <span class="on" onclick="setRating(2)">★</span>
+            <span class="on" onclick="setRating(3)">★</span>
+            <span class="on" onclick="setRating(4)">★</span>
+            <span class="on" onclick="setRating(5)">★</span>
+          </div>
+          <div class="section-label">Add a comment (optional)</div>
+          <textarea class="review-box" id="reviewCommentText" placeholder="Fast, honest, and the photos before/after were a nice touch.">Fast, honest, and the photos before/after were a nice touch.</textarea>
+          <div class="action-row"><div class="btn primary" onclick="submitReview()">Submit Review</div></div>
+        </div>
+
+        <!-- 23. PARTS SEARCH & FILTER -->
+        <div class="screen" id="partsearch">
+          <div class="app-header"><div><div class="eyebrow">Parts Sourcing</div><h1>Search Parts</h1></div></div>
+          <div class="field"><input type="text" placeholder="Search brake pads, filters, belts…" oninput="filterPartsList(this.value)"></div>
+          <div class="section-label">Filter by</div>
+          <div class="filter-chip-row">
+            <div class="filter-chip on" onclick="this.classList.toggle('on')">Fits my vehicle</div>
+            <div class="filter-chip" onclick="this.classList.toggle('on')">OEM</div>
+            <div class="filter-chip" onclick="this.classList.toggle('on')">Aftermarket</div>
+            <div class="filter-chip" onclick="this.classList.toggle('on')">Recycled</div>
+            <div class="filter-chip" onclick="this.classList.toggle('on')">In stock</div>
+          </div>
+          <div class="section-label">Category</div>
+          <div class="flist">
+            <div class="frow" onclick="activateScreen('parts')"><div><div class="name">Brakes</div><div class="driver">142 parts in stock</div></div><div>→</div></div>
+            <div class="frow" onclick="activateScreen('parts')"><div><div class="name">Suspension</div><div class="driver">88 parts in stock</div></div><div>→</div></div>
+            <div class="frow" onclick="activateScreen('parts')"><div><div class="name">Filters & Fluids</div><div class="driver">61 parts in stock</div></div><div>→</div></div>
+          </div>
+          <div class="action-row"><div class="btn primary" onclick="activateScreen('parts')">Show All Results</div></div>
+        </div>
+
+        <!-- 24. PARTS CATALOG -->
+        <div class="screen" id="parts">
+          <div class="app-header"><div><div class="eyebrow">Matched to your Land Cruiser</div><h1>Parts Catalog</h1></div></div>
+          <div class="role-toggle">
+            <div class="opt on" onclick="filterPartType('OEM', this)">OEM</div>
+            <div class="opt" onclick="filterPartType('Aftermarket', this)">Aftermarket</div>
+            <div class="opt" onclick="filterPartType('Recycled', this)">Recycled</div>
+          </div>
+          <div id="partsCatalogItems">
+            <!-- Reactively populated -->
+          </div>
+          <div class="section-label">Delivery</div>
+          <div class="card"><div class="row"><span class="k">Fastest option</span><span class="v">Same-day dispatch · Kombo Parts</span></div></div>
+          <div class="action-row"><div class="btn primary" onclick="activateScreen('checkout')">Proceed to Checkout</div></div>
+        </div>
+
+        <!-- 25. PARTS CHECKOUT -->
+        <div class="screen" id="checkout">
+          <div class="app-header"><div><div class="eyebrow">Parts Order #PO-8120</div><h1>Checkout</h1></div></div>
+          <div class="section-label">Order summary</div>
+          <div class="card">
+            <div class="row"><span class="k">Front brake pad set (Toyota Genuine)</span><span class="v money" data-gmd="4300">D4,300</span></div>
+            <div class="row"><span class="k">Cabin air filter (Toyota Genuine)</span><span class="v money" data-gmd="1250">D1,250</span></div>
+          </div>
+          <div class="section-label">Delivery method</div>
+          <div class="card"><div class="row"><span class="k">Kombo Courier Express</span><span class="v money" data-gmd="420">D420 (Same-day)</span></div></div>
+          <div class="section-label">Payment rails</div>
+          <div class="paymethod sel" onclick="selectPayRail(this, 'Afrimoney')">
+            <div class="micon2">📱</div>
+            <div><div class="mname">Afrimoney (Africell)</div><div class="msub">•••• 6621 · Instant push</div></div>
+            <span class="momo-tag">Default</span>
+          </div>
+          <div class="paymethod" onclick="selectPayRail(this, 'QMoney')">
+            <div class="micon2">📱</div>
+            <div><div class="mname">QMoney (QCell)</div><div class="msub">•••• 2290</div></div>
+          </div>
+          <div class="card">
+            <div class="price-line" style="display:flex; justify-content:space-between; font-size:12px; padding:3px 0;"><span>Parts</span><span class="money" data-gmd="5550">D5,550</span></div>
+            <div class="price-line" style="display:flex; justify-content:space-between; font-size:12px; padding:3px 0;"><span>Delivery</span><span class="money" data-gmd="420">D420</span></div>
+            <div class="price-line total" style="display:flex; justify-content:space-between; font-size:14px; font-weight:800; border-top:1px solid #DAD6C9; margin-top:5px; padding-top:6px;"><span>Total</span><span class="money" data-gmd="5970" style="color:var(--rust);">D5,970</span></div>
+          </div>
+          <div class="action-row"><div class="btn primary" onclick="triggerMobileMoneyModal('Parts Order #PO-8120', 5970)">Place Order via Mobile Money</div></div>
+        </div>
+
+        <!-- 26. CONNECT SCAN TOOL (OBD-II) -->
+        <div class="screen" id="scantool">
+          <div class="app-header"><div><div class="eyebrow">Diagnostics & Tools</div><h1>Connect Scan Tool</h1></div></div>
+          <div class="radar-box">
+            <div class="radar-sweep"></div>
+            <div class="radar-hub"></div>
+            <div style="position:absolute; bottom:8px; font-size:10px; color:var(--paper-dim); font-family:'IBM Plex Mono',monospace;">Scanning for Bluetooth OBD-II devices...</div>
+          </div>
+          <div class="section-label">Nearby adapters</div>
+          <div class="search-result" style="background:#F4F2EC; border:1px solid #DAD6C9; border-radius:9px; padding:10px 12px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
+            <div><div class="sname" style="font-size:12px; font-weight:800;">OBDLink MX+</div><div class="smeta" style="font-size:10px; color:var(--steel);">Bluetooth · Signal: -48dBm (Strong)</div></div>
+            <div class="btn primary small" style="flex:none;" onclick="simulateObdConnect('OBDLink MX+')">Connect</div>
+          </div>
+          <div class="search-result" style="background:#F4F2EC; border:1px solid #DAD6C9; border-radius:9px; padding:10px 12px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
+            <div><div class="sname" style="font-size:12px; font-weight:800;">BAFX 34t3</div><div class="smeta" style="font-size:10px; color:var(--steel);">Bluetooth · Signal: -78dBm</div></div>
+            <div class="btn ghost small" style="flex:none;" onclick="simulateObdConnect('BAFX 34t3')">Connect</div>
+          </div>
+          <div class="section-label">Active Connection</div>
+          <div class="card">
+            <div class="row"><span class="k">Vehicle Protocol</span><span class="v" id="obdProtocol">ISO 15765-4 (CAN)</span></div>
+            <div class="row"><span class="k">Live Odometer</span><span class="v" id="obdLiveOdo">41,205 mi</span></div>
+            <div class="row"><span class="k">ECU Status</span><span class="v" style="color:var(--good-fg);">Ready · 2 Faults Stored</span></div>
+          </div>
+          <div class="action-row"><div class="btn primary" onclick="activateScreen('faultcodes')">Read Fault Codes & DTCs</div></div>
+        </div>
+
+        <!-- 27. FAULT CODES & MILEAGE -->
+        <div class="screen" id="faultcodes">
+          <div class="app-header"><div><div class="eyebrow">Land Cruiser · Live Scan</div><h1>Fault Codes & DTCs</h1></div></div>
+          <div class="stat-strip">
+            <div class="stat"><div class="num">41,205</div><div class="lbl">Odometer (mi)</div></div>
+            <div class="stat"><div class="num" style="color:var(--rust);">2</div><div class="lbl">Active Codes</div></div>
+          </div>
+          <div class="section-label">Diagnostic trouble codes</div>
+          <div class="dtc-item crit">
+            <div class="dtc-code">P0301</div>
+            <div><div class="dtc-desc">Cylinder 1 Misfire Detected</div><div class="dtc-sub">Critical · Potential ignition coil or spark failure</div></div>
+          </div>
+          <div class="dtc-item">
+            <div class="dtc-code">P0442</div>
+            <div><div class="dtc-desc">EVAP System Small Leak</div><div class="dtc-sub">Minor · Gas cap seal or vapor canister purge</div></div>
+          </div>
+          <div class="section-label">Mileage synchronization</div>
+          <div class="card"><div class="row"><span class="k">Auto-synced from scan tool</span><span class="v" style="color:var(--good-fg);">Verified Just Now ✓</span></div></div>
+          <div class="action-row"><div class="btn ghost" onclick="showToast('Mileage verified and signed into Vehicle Passport!')">Sign to Passport</div><div class="btn primary" onclick="pushFaultsToJobRequest()">Push DTCs to Job Quote Request</div></div>
+        </div>
+
+        <!-- 28. BROWSE MOBILITY -->
+        <div class="screen" id="browsemobility">
+          <div class="app-header"><div><div class="eyebrow">Mobility</div><h1>Browse Vehicles</h1></div></div>
+          <div class="filter-chip-row">
+            <div class="filter-chip on">This weekend</div>
+            <div class="filter-chip">Under D4,200/day</div>
+            <div class="filter-chip">SUV</div>
+            <div class="filter-chip">Verified history</div>
+          </div>
+          <div class="vin-plate" onclick="activateScreen('mobility')">
+            <div class="media-ph" style="aspect-ratio:16/9; border-radius:6px; margin-bottom:10px;"><span class="micon">🚙</span><span class="mlabel">Honda CR-V EX-L</span></div>
+            <span class="status-chip ok">Verified history</span>
+            <div class="make-model">2022 Honda CR-V EX-L</div>
+            <div class="meta-row"><div><b class="money" data-gmd="4000">D4,000/day</b>Price</div><div><b>4.9 ★</b>Rating</div></div>
+            <div class="vin-row"><span>Bakau · 0.9 mi</span><span>Book Now →</span></div>
+          </div>
+          <div class="vin-plate" onclick="activateScreen('mobility')">
+            <div class="media-ph" style="aspect-ratio:16/9; border-radius:6px; margin-bottom:10px;"><span class="micon">🚙</span><span class="mlabel">Toyota RAV4</span></div>
+            <span class="status-chip ok">Verified history</span>
+            <div class="make-model">2020 Toyota RAV4</div>
+            <div class="meta-row"><div><b class="money" data-gmd="3600">D3,600/day</b>Price</div><div><b>4.7 ★</b>Rating</div></div>
+            <div class="vin-row"><span>Fajara · 2.3 mi</span><span>Book Now →</span></div>
+          </div>
+        </div>
+
+        <!-- 29. BOOK A VEHICLE -->
+        <div class="screen" id="mobility">
+          <div class="app-header"><div><div class="eyebrow">Civic Safety Checked</div><h1>Book a Vehicle</h1></div></div>
+          <div class="cover-badge">🛡 Driver & vehicle safety-checked via Street Code Civic</div>
+          <div class="vin-plate">
+            <span class="status-chip ok">Verified</span>
+            <div class="make-model">2022 Honda CR-V EX-L</div>
+            <div class="meta-row"><div><b>4.9 ★</b>Owner rating</div><div><b>12,880 mi</b>Mileage</div></div>
+            <div class="vin-row"><span>Full service log on file</span><span>Passport →</span></div>
+          </div>
+          <div class="role-toggle" id="tripTypeToggle">
+            <div class="opt on" onclick="setTripMode('rental', this)">Daily Rental</div>
+            <div class="opt" onclick="setTripMode('town', this)">Town Trip</div>
+            <div class="opt" onclick="setTripMode('lease', this)">Monthly Lease</div>
+          </div>
+          <div id="rentalMode">
+            <div class="section-label">Select dates</div>
+            <div class="calendar" style="display:grid; grid-template-columns:repeat(7,1fr); gap:4px; margin:8px 0;">
+              <div style="text-align:center; font-size:10px; color:var(--steel); font-weight:700;">M</div>
+              <div style="text-align:center; font-size:10px; color:var(--steel); font-weight:700;">T</div>
+              <div style="text-align:center; font-size:10px; color:var(--steel); font-weight:700;">W</div>
+              <div style="text-align:center; font-size:10px; color:var(--steel); font-weight:700;">T</div>
+              <div style="text-align:center; font-size:10px; color:var(--steel); font-weight:700;">F</div>
+              <div style="text-align:center; font-size:10px; color:var(--steel); font-weight:700;">S</div>
+              <div style="text-align:center; font-size:10px; color:var(--steel); font-weight:700;">S</div>
+              <div style="aspect-ratio:1; background:#F4F2EC; display:flex; align-items:center; justify-content:center; border-radius:5px; font-size:11px;">1</div>
+              <div style="aspect-ratio:1; background:var(--good-bg); color:var(--good-fg); display:flex; align-items:center; justify-content:center; border-radius:5px; font-size:11px; font-weight:700;">2</div>
+              <div style="aspect-ratio:1; background:var(--rust); color:#fff; display:flex; align-items:center; justify-content:center; border-radius:5px; font-size:11px; font-weight:700;">3</div>
+              <div style="aspect-ratio:1; background:var(--rust); color:#fff; display:flex; align-items:center; justify-content:center; border-radius:5px; font-size:11px; font-weight:700;">4</div>
+              <div style="aspect-ratio:1; background:var(--good-bg); color:var(--good-fg); display:flex; align-items:center; justify-content:center; border-radius:5px; font-size:11px; font-weight:700;">5</div>
+              <div style="aspect-ratio:1; background:#F4F2EC; display:flex; align-items:center; justify-content:center; border-radius:5px; font-size:11px;">6</div>
+              <div style="aspect-ratio:1; background:#F4F2EC; display:flex; align-items:center; justify-content:center; border-radius:5px; font-size:11px;">7</div>
+            </div>
+            <div class="card">
+              <div class="price-line" style="display:flex; justify-content:space-between; font-size:12px; padding:3px 0;"><span>2 days × D4,000</span><span class="money" data-gmd="8000">D8,000</span></div>
+              <div class="price-line" style="display:flex; justify-content:space-between; font-size:12px; padding:3px 0;"><span>Escrow protection fee</span><span class="money" data-gmd="630">D630</span></div>
+              <div class="price-line total" style="display:flex; justify-content:space-between; font-size:14px; font-weight:800; border-top:1px solid #DAD6C9; margin-top:4px; padding-top:6px;"><span>Total</span><span class="money" data-gmd="8630" style="color:var(--rust);">D8,630</span></div>
+            </div>
+          </div>
+          <div id="townMode" style="display:none;">
+            <div class="card">
+              <div class="row"><span class="k">Pickup</span><span class="v">Senegambia Strip</span></div>
+              <div class="row"><span class="k">Drop-off</span><span class="v">Kairaba Avenue</span></div>
+              <div class="row"><span class="k">Est. Fare</span><span class="v money" data-gmd="650">D650</span></div>
+            </div>
+          </div>
+          <div id="leaseMode" style="display:none;">
+            <div class="card">
+              <div class="row"><span class="k">Minimum term</span><span class="v">6 months</span></div>
+              <div class="row"><span class="k">Monthly rate</span><span class="v money" data-gmd="65000">D65,000/mo</span></div>
+            </div>
+          </div>
+          <div class="section-label">Pay with</div>
+          <div class="paymethod sel" onclick="selectPayRail(this, 'QMoney')">
+            <div class="micon2">📱</div><div><div class="mname">QMoney (QCell)</div><div class="msub">•••• 2290 · Mobile Money</div></div><span class="momo-tag">Instant</span>
+          </div>
+          <div class="action-row"><div class="btn primary" onclick="confirmMobilityBooking()">Confirm & Place Escrow Deposit</div></div>
+        </div>
+
+        <!-- 30. BOOKING CONFIRMED -->
+        <div class="screen" id="confirmed">
+          <div class="app-header"><div><div class="eyebrow">Booking #BK-1042</div><h1>Confirmed ✓</h1></div></div>
+          <div class="vin-plate">
+            <span class="status-chip ok">Confirmed</span>
+            <div class="make-model">2022 Honda CR-V EX-L</div>
+            <div class="meta-row"><div><b>Aug 3–4</b>Dates</div><div><b class="money" data-gmd="8630">D8,630</b>Total Paid (Escrow)</div></div>
+            <div class="vin-row"><span>Pickup: Kombo St, Bakau</span><span>Directions →</span></div>
+          </div>
+          <div class="section-label">What happens next</div>
+          <div class="timeline-item"><div class="dot2"></div><div class="body"><div class="title">Owner confirms pickup slot</div><div class="sub">Usually within 2 hours</div></div></div>
+          <div class="timeline-item"><div class="dot2"></div><div class="body"><div class="title">Vehicle condition check-in</div><div class="sub">360° photo check in the app at handover</div></div></div>
+          <div class="timeline-item"><div class="dot2"></div><div class="body"><div class="title">Return by 6pm, Aug 4</div><div class="sub">Funds released to host upon condition sign-off</div></div></div>
+          <div class="action-row"><div class="btn ghost" onclick="activateScreen('messages')">Message Host</div><div class="btn primary" onclick="activateScreen('garage')">Back to Garage</div></div>
+        </div>
+
+        <!-- 31. DRIVER: INCOMING RIDE REQUEST -->
+        <div class="screen" id="riderequest">
+          <div class="app-header"><div><div class="eyebrow">Driver Mode · Online</div><h1>New Ride Request</h1></div></div>
+          <div class="ride-alert">
+            <div class="rfare money" data-gmd="600">D600</div>
+            <div class="rmeta">3.2 km trip · Est. 11 min</div>
+            <div class="countdown-ring" id="rideCountdownVal">9s</div>
+          </div>
+          <div class="card">
+            <div class="row"><span class="k">Pickup</span><span class="v">Senegambia Strip, Kololi</span></div>
+            <div class="row"><span class="k">Drop-off</span><span class="v">Kairaba Avenue</span></div>
+            <div class="row"><span class="k">Rider</span><span class="v">F. Sanyang (4.8 ★)</span></div>
+          </div>
+          <div class="action-row"><div class="btn ghost" onclick="declineRide()">Decline</div><div class="btn primary" onclick="acceptDriverRide()">Accept Ride</div></div>
+        </div>
+
+        <!-- 32. DRIVER: TRIP IN PROGRESS -->
+        <div class="screen" id="tripprogress">
+          <div class="app-header"><div><div class="eyebrow">Trip #RD-8834 · Live</div><h1>En Route to Drop-off</h1></div></div>
+          <div class="interactive-map">
+            <svg class="map-canvas" viewBox="0 0 400 240">
+              <rect width="400" height="240" fill="#E5E1D5"/>
+              <path d="M50,180 Q180,100 350,60" stroke="#C8501A" stroke-width="5" stroke-dasharray="6,4" fill="none"/>
+              <circle cx="50" cy="180" r="6" fill="#1565C0"/>
+              <circle cx="350" cy="60" r="7" fill="#242829"/>
+              <circle cx="210" cy="115" r="8" fill="#C8501A" stroke="#fff" stroke-width="2">
+                <animate attributeName="cx" values="180;240;180" dur="4s" repeatCount="indefinite"/>
+              </circle>
+            </svg>
+          </div>
+          <div class="trip-progress">
+            <div class="tp-dot"></div><div class="tp-line"></div><div class="tp-dot"></div><div class="tp-line" style="background:#DAD6C9;"></div><div class="tp-dot end"></div>
+          </div>
+          <div class="card">
+            <div class="row"><span class="k">Rider</span><span class="v">F. Sanyang</span></div>
+            <div class="row"><span class="k">Drop-off</span><span class="v">Kairaba Avenue</span></div>
+            <div class="row"><span class="k">ETA</span><span class="v">6 min remaining</span></div>
+            <div class="row"><span class="k">Meter Fare</span><span class="v money" data-gmd="600">D600</span></div>
+          </div>
+          <div class="action-row"><div class="btn ghost" onclick="activateScreen('messages')">Message Rider</div><div class="btn primary" onclick="completeDriverTrip()">Complete Trip</div></div>
+        </div>
+
+        <!-- 33. DRIVER: TRIP COMPLETE -->
+        <div class="screen" id="tripearnings">
+          <div class="app-header"><div><div class="eyebrow">Trip #RD-8834 · Complete</div><h1>Trip Summary</h1></div></div>
+          <div class="earnings-hero">
+            <div class="enum money" data-gmd="558">+D558</div>
+            <div class="elbl">Your net earnings (after 7% platform fee)</div>
+          </div>
+          <div class="card">
+            <div class="row"><span class="k">Gross Fare</span><span class="v money" data-gmd="600">D600</span></div>
+            <div class="row"><span class="k">Street Code Fee (7%)</span><span class="v money" data-gmd="42">-D42</span></div>
+            <div class="row"><span class="k">Credited To</span><span class="v">Afrimoney Wallet</span></div>
+          </div>
+          <div class="stat-strip">
+            <div class="stat"><div class="num">15</div><div class="lbl">Trips Today</div></div>
+            <div class="stat"><div class="num money" data-gmd="4828">D4,828</div><div class="lbl">Today's Total</div></div>
+          </div>
+          <div class="action-row"><div class="btn ghost" onclick="showToast('Rider rated 5 stars')">Rate Rider</div><div class="btn primary" onclick="activateScreen('riderequest')">Go Online for Next</div></div>
+        </div>
+
+        <!-- 34. BROWSE LISTINGS (VEHICLE SALES) -->
+        <div class="screen" id="browselistings">
+          <div class="app-header"><div><div class="eyebrow">Vehicle Sales Marketplace</div><h1>Browse Listings</h1></div></div>
+          <div class="role-toggle">
+            <div class="opt on" onclick="filterListings('all', this)">All</div>
+            <div class="opt" onclick="filterListings('dealer', this)">Dealer</div>
+            <div class="opt" onclick="filterListings('private', this)">Private</div>
+            <div class="opt" onclick="filterListings('auction', this)">Auction</div>
+          </div>
+          <div class="vin-plate" onclick="activateScreen('passport')">
+            <div class="media-ph" style="aspect-ratio:16/9; border-radius:6px; margin-bottom:10px;"><span class="micon">🚙</span><span class="mlabel">Toyota Land Cruiser Prado TX</span></div>
+            <span class="status-chip ok">Verified Passport</span>
+            <div class="make-model">2019 Toyota Land Cruiser Prado TX</div>
+            <div class="meta-row"><div><b class="money" data-gmd="2100000">D2,100,000</b>Asking Price</div><div><b>Private</b>Source</div></div>
+            <div class="vin-row"><span>41,205 mi · Serrekunda</span><span>Inspect Passport →</span></div>
+          </div>
+          <div class="vin-plate" onclick="activateScreen('passport')">
+            <div class="media-ph" style="aspect-ratio:16/9; border-radius:6px; margin-bottom:10px;"><span class="micon">🚙</span><span class="mlabel">Honda CR-V EX-L</span></div>
+            <span class="status-chip ok">Full History</span>
+            <div class="make-model">2021 Honda CR-V EX-L</div>
+            <div class="meta-row"><div><b class="money" data-gmd="1850000">D1,850,000</b>Asking Price</div><div><b>Kombo Motors</b>Dealer</div></div>
+            <div class="vin-row"><span>18,300 mi · Kanifing</span><span>Inspect Passport →</span></div>
+          </div>
+          <div class="action-row"><div class="btn primary" onclick="activateScreen('listvehicle')">List My Vehicle for Sale</div></div>
+        </div>
+
+        <!-- 35. LIST MY VEHICLE -->
+        <div class="screen" id="listvehicle">
+          <div class="app-header"><div><div class="eyebrow">Vehicle Sales Marketplace</div><h1>List My Vehicle</h1></div></div>
+          <div class="vin-plate">
+            <div class="make-model">2019 Toyota Land Cruiser Prado TX</div>
+            <div class="meta-row"><div><b>41,205 mi</b>Mileage</div><div><b>Verified Passport</b>History</div></div>
+            <div class="vin-row"><span>VIN JTMHY7AJ...4X2091</span><span>Auto-filled from Passport ✓</span></div>
+          </div>
+          <div class="field"><label>Asking price (GMD)</label><input type="text" id="saleAskingPrice" placeholder="e.g. 2,100,000" value="2,100,000"></div>
+          <div class="field"><label>Reason for selling (optional)</label><input type="text" id="saleReason" placeholder="Upgrading, relocating, etc." value="Upgrading to new model"></div>
+          <div class="scan-box" onclick="showToast('8 HD vehicle photos uploaded')">📷 Add photos — listings with a verified passport and clear photos sell 3x faster</div>
+          <div class="cover-badge">✓ Your complete service history and mileage log carry over automatically</div>
+          <div class="action-row"><div class="btn primary" onclick="publishVehicleListing()">Publish Listing</div></div>
+        </div>
+
+        <!-- 36. DEALER INVENTORY -->
+        <div class="screen" id="dealerinventory">
+          <div class="app-header"><div><div class="eyebrow">Dealership Account</div><h1>Kombo Motors Inventory</h1></div></div>
+          <div class="stat-strip">
+            <div class="stat"><div class="num">14</div><div class="lbl">Listed</div></div>
+            <div class="stat"><div class="num">3</div><div class="lbl">Pending Sale</div></div>
+            <div class="stat"><div class="num money" data-gmd="26400000">D26.4M</div><div class="lbl">Inv. Value</div></div>
+          </div>
+          <div class="section-label">Active inventory</div>
+          <div class="flist">
+            <div class="frow"><div><div class="name">2021 Honda CR-V EX-L</div><div class="driver money" data-gmd="1850000">D1,850,000 · Listed 4 days</div></div><div class="flag" style="background:var(--good-bg); color:var(--good-fg);">Live</div></div>
+            <div class="frow"><div><div class="name">2020 Toyota RAV4</div><div class="driver money" data-gmd="1600000">D1,600,000 · Listed 9 days</div></div><div class="flag" style="background:var(--warn-bg); color:var(--warn-fg);">Offer pending</div></div>
+            <div class="frow"><div><div class="name">2018 Nissan X-Trail</div><div class="driver money" data-gmd="1150000">D1,150,000 · Listed 2 days</div></div><div class="flag" style="background:var(--good-bg); color:var(--good-fg);">Live</div></div>
+          </div>
+          <div class="action-row"><div class="btn primary" onclick="showToast('Vehicle VIN scan dialog opened')">Add Vehicle to Inventory</div></div>
+        </div>
+
+        <!-- 37. FUEL, CHARGING & SERVICES -->
+        <div class="screen" id="services">
+          <div class="app-header"><div><div class="eyebrow">Utilities & Services</div><h1>Nearby Services</h1></div></div>
+          <div class="filter-chip-row">
+            <div class="filter-chip on" onclick="filterServiceType('all', this)">All</div>
+            <div class="filter-chip" onclick="filterServiceType('fuel', this)">⛽ Fuel</div>
+            <div class="filter-chip" onclick="filterServiceType('ev', this)">🔋 EV Charging</div>
+            <div class="filter-chip" onclick="filterServiceType('tyre', this)">🛞 Tyres</div>
+            <div class="filter-chip" onclick="filterServiceType('towing', this)">🚨 Towing</div>
+          </div>
+          <div class="svc-row" onclick="activateScreen('routes')">
+            <div class="svc-icon">⛽</div>
+            <div><div class="svc-name">Total Kombo Fuel Station</div><div class="svc-meta">Petrol, Diesel<span class="svc-open">Open now</span></div></div>
+            <div class="svc-dist">0.6 mi</div>
+          </div>
+          <div class="svc-row" onclick="activateScreen('routes')">
+            <div class="svc-icon">🔋</div>
+            <div><div class="svc-name">GreenCharge Bakau</div><div class="svc-meta">2 fast chargers free<span class="svc-open">Open now</span></div></div>
+            <div class="svc-dist">1.1 mi</div>
+          </div>
+          <div class="svc-row" onclick="activateScreen('routes')">
+            <div class="svc-icon">🛞</div>
+            <div><div class="svc-name">Kombo Tyre Point</div><div class="svc-meta">All sizes, balancing<span class="svc-open">Open now</span></div></div>
+            <div class="svc-dist">1.4 mi</div>
+          </div>
+          <div class="svc-row" onclick="activateScreen('routes')">
+            <div class="svc-icon">🚨</div>
+            <div><div class="svc-name">Kombo 24hr Towing & Recovery</div><div class="svc-meta">Rapid breakdown response<span class="svc-open">Open now</span></div></div>
+            <div class="svc-dist">1.8 mi</div>
+          </div>
+          <div class="action-row"><div class="btn primary" onclick="activateScreen('routes')">Get Turn-by-Turn Directions</div></div>
+        </div>
+
+        <!-- 38. ROUTES & NAVIGATION -->
+        <div class="screen" id="routes">
+          <div class="app-header"><div><div class="eyebrow">Utilities & Services</div><h1>Routes & Directions</h1></div></div>
+          <div class="interactive-map">
+            <svg class="map-canvas" viewBox="0 0 400 240">
+              <rect width="400" height="240" fill="#E5E1D5"/>
+              <path d="M40,200 C120,200 180,80 340,60" stroke="#2E7D32" stroke-width="6" fill="none"/>
+              <circle cx="40" cy="200" r="7" fill="#1565C0"/>
+              <circle cx="340" cy="60" r="7" fill="#C8501A"/>
+              <circle cx="170" cy="115" r="5" fill="#E3A008"/>
+              <text x="180" y="118" font-size="9" font-weight="700" fill="#121415">Total Fuel (2 min detour)</text>
+            </svg>
+          </div>
+          <div class="card">
+            <div class="row"><span class="k">From</span><span class="v">Current location</span></div>
+            <div class="row"><span class="k">To</span><span class="v">Timbooba Motors, Banjul</span></div>
+            <div class="row"><span class="k">ETA</span><span class="v">14 min · 6.2 mi</span></div>
+          </div>
+          <div class="section-label">Recommended stops along the way</div>
+          <div class="svc-row"><div class="svc-icon">⛽</div><div><div class="svc-name">Total Kombo Fuel Station</div><div class="svc-meta">2 min detour off highway</div></div></div>
+          <div class="action-row"><div class="btn ghost" onclick="showToast('Tolls route excluded')">Avoid Tolls</div><div class="btn primary" onclick="showToast('Navigation started! Audio guidance ready.')">Start Navigation</div></div>
+        </div>
+
+        <!-- 39. CAR CULTURE FEED -->
+        <div class="screen" id="culture">
+          <div class="app-header"><div><div class="eyebrow">Street Code</div><h1>Feed</h1></div><div class="avatar">KC</div></div>
+          <div class="event-strip" style="display:flex; gap:8px; overflow-x:auto; margin-bottom:12px; padding-bottom:4px;">
+            <div class="event-card" style="flex-shrink:0; width:130px; background:#F4F2EC; border:1px solid #DAD6C9; border-radius:9px; padding:8px;" onclick="activateScreen('event')">
+              <div style="font-size:9px; color:var(--rust); font-weight:800; font-family:'IBM Plex Mono',monospace;">SAT, AUG 2</div>
+              <div style="font-size:11px; font-weight:700; margin-top:2px;">Cars & Coffee Banjul</div>
+              <div style="font-size:9px; color:var(--steel); margin-top:2px;">Senegambia · 8am</div>
+            </div>
+            <div class="event-card" style="flex-shrink:0; width:130px; background:#F4F2EC; border:1px solid #DAD6C9; border-radius:9px; padding:8px;">
+              <div style="font-size:9px; color:var(--rust); font-weight:800; font-family:'IBM Plex Mono',monospace;">SUN, AUG 17</div>
+              <div style="font-size:11px; font-weight:700; margin-top:2px;">Kombo Track Day</div>
+              <div style="font-size:9px; color:var(--steel); margin-top:2px;">Kombo Circuit</div>
+            </div>
+          </div>
+          <div class="post" style="background:#F4F2EC; border:1px solid #DAD6C9; border-radius:10px; overflow:hidden; margin-bottom:12px;">
+            <div style="display:flex; align-items:center; gap:8px; padding:10px 12px 0;">
+              <div class="avatar" style="width:26px; height:26px;">AJ</div>
+              <div><div style="font-size:12px; font-weight:800;">A. Jallow</div><div style="font-size:10px; color:var(--steel);">'71 Land Cruiser FJ40 · Restoration</div></div>
+            </div>
+            <div class="media-ph video" style="aspect-ratio:16/9; margin-top:8px;"><span class="micon">🚙</span><span class="mlabel">FJ40 · Suspension Rebuild</span></div>
+            <div style="padding:10px 12px; font-size:12px;">Week 6 of the FJ40 restoration — new suspension bushings finally in. Bodywork next. Verified in Vehicle Passport.</div>
+            <div style="display:flex; gap:14px; padding:0 12px 10px; font-size:11px; color:var(--steel);">
+              <span onclick="this.innerHTML='♥ 85'" style="cursor:pointer;">♥ 84</span><span>💬 12</span><span onclick="activateScreen('pubprofile')" style="cursor:pointer; font-weight:700;">Build Log →</span>
+            </div>
+          </div>
+          <div class="action-row"><div class="btn primary" onclick="showToast('Camera upload prompt ready')">Share a Build</div></div>
+        </div>
+
+        <!-- 40. MY COLLECTION -->
+        <div class="screen" id="collection">
+          <div class="app-header"><div><div class="eyebrow">Personal Collection</div><h1>My Collection</h1></div></div>
+          <div class="stat-strip">
+            <div class="stat"><div class="num">3</div><div class="lbl">Cars</div></div>
+            <div class="stat"><div class="num money" data-gmd="4275000">D4.3M</div><div class="lbl">Est. Value</div></div>
+            <div class="stat"><div class="num" style="color:var(--good-fg);">+8%</div><div class="lbl">1yr Change</div></div>
+          </div>
+          <div class="section-label">Garage portfolio worth breakdown</div>
+          <div class="card">
+            <div style="margin-bottom:8px;">
+              <div style="display:flex; justify-content:space-between; font-size:11px; margin-bottom:3px;">
+                <span>FJ40 Restoration</span><b class="money" data-gmd="2000000">D2,000,000 · 47%</b>
+              </div>
+              <div style="height:7px; background:#DAD6C9; border-radius:4px; overflow:hidden;"><div style="width:47%; height:100%; background:var(--rust);"></div></div>
+            </div>
+            <div style="margin-bottom:8px;">
+              <div style="display:flex; justify-content:space-between; font-size:11px; margin-bottom:3px;">
+                <span>Corolla AE86</span><b class="money" data-gmd="1330000">D1,330,000 · 31%</b>
+              </div>
+              <div style="height:7px; background:#DAD6C9; border-radius:4px; overflow:hidden;"><div style="width:31%; height:100%; background:var(--amber);"></div></div>
+            </div>
+            <div>
+              <div style="display:flex; justify-content:space-between; font-size:11px; margin-bottom:3px;">
+                <span>Land Cruiser Prado</span><b class="money" data-gmd="945000">D945,000 · 22%</b>
+              </div>
+              <div style="height:7px; background:#DAD6C9; border-radius:4px; overflow:hidden;"><div style="width:22%; height:100%; background:var(--steel);"></div></div>
+            </div>
+          </div>
+          <div class="action-row"><div class="btn ghost" onclick="activateScreen('addvehicle')">Add to Collection</div><div class="btn primary" onclick="activateScreen('pubprofile')">Provenance Vault & Reel</div></div>
+        </div>
+
+        <!-- 41. COLLECTION PROFILE (PUBLIC) -->
+        <div class="screen" id="pubprofile">
+          <div class="media-ph video" style="aspect-ratio:16/9; border-radius:12px; margin-bottom:0;"><span class="micon">🎬</span><span class="mlabel">Cover reel · FJ40 walkaround</span></div>
+          <div style="display:flex; align-items:flex-end; gap:12px; margin-top:-26px; padding-left:10px; margin-bottom:8px;">
+            <div style="width:54px; height:54px; border-radius:12px; border:3px solid var(--paper); background:var(--graphite); color:var(--amber); display:flex; align-items:center; justify-content:center; font-size:22px;">🏆</div>
+          </div>
+          <div style="font-size:17px; font-weight:800; font-family:'Oswald',sans-serif;">Kaabu's Garage</div>
+          <div style="font-size:11px; color:var(--steel);">Banjul · Collector since 2019 · 3 builds</div>
+          <div style="display:flex; gap:16px; margin:10px 0 12px;">
+            <div><span style="font-size:15px; font-weight:800; display:block;">3</span><span style="font-size:9px; color:var(--steel); text-transform:uppercase;">Vehicles</span></div>
+            <div><span style="font-size:15px; font-weight:800; display:block;">1.2k</span><span style="font-size:9px; color:var(--steel); text-transform:uppercase;">Followers</span></div>
+            <div><span style="font-size:15px; font-weight:800; display:block;">41</span><span style="font-size:9px; color:var(--steel); text-transform:uppercase;">Posts</span></div>
+            <div><span class="money" data-gmd="4275000" style="font-size:15px; font-weight:800; display:block;">D4.3M</span><span style="font-size:9px; color:var(--steel); text-transform:uppercase;">Valuation</span></div>
+          </div>
+          <div class="role-toggle"><div class="opt on">Photos</div><div class="opt">Videos</div><div class="opt">Build Logs</div></div>
+          <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:4px;">
+            <div class="media-ph" style="aspect-ratio:1;"><span class="micon">🚙</span></div>
+            <div class="media-ph video" style="aspect-ratio:1;"><span class="micon">🚙</span></div>
+            <div class="media-ph" style="aspect-ratio:1;"><span class="micon">🛞</span></div>
+            <div class="media-ph video" style="aspect-ratio:1;"><span class="micon">🏎️</span></div>
+            <div class="media-ph" style="aspect-ratio:1;"><span class="micon">🏎️</span></div>
+            <div class="media-ph" style="aspect-ratio:1;"><span class="micon">🔧</span></div>
+          </div>
+          <div class="action-row"><div class="btn ghost" onclick="showToast('You are now following Kaabu\'s Garage')">Follow</div><div class="btn primary" onclick="showToast('Upload media form opened')">Upload Photo/Video</div></div>
+        </div>
+
+        <!-- 42. EVENT DETAIL -->
+        <div class="screen" id="event">
+          <div class="app-header"><div><div class="eyebrow">Car Culture · Event</div><h1>Cars & Coffee Banjul</h1></div></div>
+          <div class="media-ph" style="aspect-ratio:16/9; margin-bottom:12px; border-radius:8px;"><span class="micon">📸</span><span class="mlabel">Cars & Coffee Banjul</span></div>
+          <div class="card">
+            <div class="row"><span class="k">Date & Time</span><span class="v">Sat, Aug 2 · 8:00 AM</span></div>
+            <div class="row"><span class="k">Location</span><span class="v">Senegambia Strip, Kololi</span></div>
+            <div class="row"><span class="k">Hosted by</span><span class="v">Banjul Car Club</span></div>
+            <div class="row"><span class="k">RSVPs</span><span class="v" id="eventRsvpCount">62 people going</span></div>
+          </div>
+          <div class="action-row"><div class="btn ghost" onclick="showToast('Event link copied to clipboard')">Share Event</div><div class="btn primary" onclick="rsvpEvent()">I'm Going ✓</div></div>
+        </div>
+
+        <!-- 43. NOTIFICATIONS -->
+        <div class="screen" id="notifications">
+          <div class="app-header"><div><div class="eyebrow">Account</div><h1>Notifications</h1></div></div>
+          <div id="notificationsContainer">
+            <!-- Reactively rendered -->
+          </div>
+          <div class="action-row"><div class="btn ghost" onclick="clearAllNotifications()">Clear All</div></div>
+        </div>
+
+        <!-- 44. PAYMENTS & PAYOUTS -->
+        <div class="screen" id="payments">
+          <div class="app-header"><div><div class="eyebrow">Account</div><h1>Payments & Wallet</h1></div></div>
+          <div class="paycard">
+            <div class="pcrow"><span>Platform Wallet Balance</span><span>Available</span></div>
+            <div class="pcnum money" id="walletBalanceNum" data-gmd="28875">D28,875</div>
+            <div class="pcrow"><span>Instant payout available</span><span>Afrimoney / QMoney</span></div>
+          </div>
+          <div class="section-label">Recent transactions</div>
+          <div id="paymentsTxList">
+            <div class="payout-row"><span>Job #2291 payout</span><span class="pos money" data-gmd="9500">+D9,500</span></div>
+            <div class="payout-row"><span>Parts order #PO-8120</span><span class="money" data-gmd="5970" style="color:var(--rust);">-D5,970</span></div>
+            <div class="payout-row"><span>Honda CR-V booking payout</span><span class="pos money" data-gmd="8120">+D8,120</span></div>
+            <div class="payout-row"><span>Platform fee (7%)</span><span class="money" data-gmd="610" style="color:var(--steel);">-D610</span></div>
+          </div>
+          <div class="section-label">Withdraw directly to</div>
+          <div class="paymethod sel" onclick="selectPayRail(this, 'Afrimoney')">
+            <div class="micon2">📱</div><div><div class="mname">Afrimoney (Africell)</div><div class="msub">•••• 6621 · Instant push</div></div><span class="momo-tag">Fastest</span>
+          </div>
+          <div class="action-row"><div class="btn ghost" onclick="activateScreen('paymethods')">Payment Methods</div><div class="btn primary" onclick="withdrawWalletFunds()">Withdraw All to Mobile Money</div></div>
+        </div>
+
+        <!-- 45. PAYMENT METHODS -->
+        <div class="screen" id="paymethods">
+          <div class="app-header"><div><div class="eyebrow">Account</div><h1>Payment Methods</h1></div></div>
+          <div class="section-label">Mobile money</div>
+          <div class="paymethod sel">
+            <div class="micon2">📱</div><div><div class="mname">Afrimoney (Africell)</div><div class="msub">•••• 6621 · Verified Default</div></div><span class="momo-tag">Default</span>
+          </div>
+          <div class="paymethod">
+            <div class="micon2">📱</div><div><div class="mname">QMoney (QCell)</div><div class="msub">•••• 2290 · Verified</div></div>
+          </div>
+          <div class="section-label">Debit & Credit Cards</div>
+          <div class="paymethod">
+            <div class="micon2">💳</div><div><div class="mname">Visa ending in 4471</div><div class="msub">Expires 09/28</div></div>
+          </div>
+          <div class="action-row"><div class="btn ghost" onclick="showToast('Card scanner opened')">Add Card</div><div class="btn primary" onclick="showToast('Mobile Money verification SMS sent')">Link Mobile Money</div></div>
+        </div>
+
+        <!-- 46. SETTINGS -->
+        <div class="screen" id="settings">
+          <div class="app-header"><div><div class="eyebrow">Account</div><h1>Settings</h1></div><div class="avatar">KC</div></div>
+          <div class="section-label">Profile & tenant</div>
+          <div class="card">
+            <div class="row"><span class="k">Name</span><span class="v">Kaabu Corp</span></div>
+            <div class="row"><span class="k">Account type</span><span class="v">Owner + Collector</span></div>
+            <div class="row"><span class="k">Country / Region</span><span class="v">The Gambia (Banjul)</span></div>
+          </div>
+          <div class="section-label">Active platform currency</div>
+          <div class="role-toggle" id="settingsCurrToggle">
+            <div class="opt on" onclick="setCurrency('GMD')">GMD</div>
+            <div class="opt" onclick="setCurrency('USD')">USD</div>
+            <div class="opt" onclick="setCurrency('EUR')">EUR</div>
+            <div class="opt" onclick="setCurrency('GBP')">GBP</div>
+          </div>
+          <div class="section-label">Privacy & telemetry</div>
+          <div class="card">
+            <div class="row"><span class="k">Public collection profile</span><span class="v">On</span></div>
+            <div class="row"><span class="k">Pulse live vehicle sharing</span><span class="v">Off (Owner Default)</span></div>
+          </div>
+          <div class="action-row"><div class="btn ghost" onclick="StreetCodeStore.resetDemoData()">Reset Demo Database</div><div class="btn ghost" style="color:var(--rust);" onclick="activateScreen('signup')">Log Out</div></div>
+        </div>
+
+        <!-- 47. ADMIN: VERIFICATION QUEUE (CIVIC) -->
+        <div class="screen" id="adminqueue">
+          <div class="badge-authority">🛡 Platform Admin</div>
+          <div class="app-header"><div><div class="eyebrow">Compliance</div><h1>Verification Queue</h1></div></div>
+          <div class="stat-strip">
+            <div class="stat"><div class="num" id="adminPendingCount">3</div><div class="lbl">Pending</div></div>
+            <div class="stat"><div class="num">142</div><div class="lbl">Verified</div></div>
+            <div class="stat"><div class="num">0</div><div class="lbl">Flagged</div></div>
+          </div>
+          <div class="section-label">Pending verification review</div>
+          <div id="adminQueueList">
+            <!-- Reactively rendered -->
+          </div>
+        </div>
+
+        <!-- 48. ADMIN: DISPUTE RESOLUTION (CIVIC) -->
+        <div class="screen" id="admindispute">
+          <div class="badge-authority">🛡 Platform Admin</div>
+          <div class="app-header"><div><div class="eyebrow">Case #418 · Escrow Lock</div><h1>Dispute Resolution</h1></div></div>
+          <div class="card">
+            <div class="row"><span class="k">Job</span><span class="v">#2288 — Suspension repair</span></div>
+            <div class="row"><span class="k">Amount held in escrow</span><span class="v money" data-gmd="14700">D14,700</span></div>
+            <div class="row"><span class="k">Filed by</span><span class="v">Customer</span></div>
+          </div>
+          <div class="section-label">Claim details</div>
+          <div style="background:#F4F2EC; border-left:3px solid var(--rust); border-radius:0 8px 8px 0; padding:8px 10px; margin-bottom:8px; font-size:11px;">
+            <b>Customer:</b> "Shocks were quoted as new OEM, invoice shows aftermarket parts were installed instead."
+          </div>
+          <div style="background:#F4F2EC; border-left:3px solid var(--good); border-radius:0 8px 8px 0; padding:8px 10px; margin-bottom:8px; font-size:11px;">
+            <b>Garage:</b> "Customer approved a substitution over chat after OEM was out of stock — see verified thread."
+          </div>
+          <div class="action-row"><div class="btn ghost" onclick="resolveAdminDispute(418, 'refund')">Refund Customer</div><div class="btn primary" onclick="resolveAdminDispute(418, 'release')">Release to Garage</div></div>
+        </div>
+
+        <!-- 49. ADMIN: APPEALS & OVERRIDES (CIVIC) -->
+        <div class="screen" id="appeals">
+          <div class="badge-authority">🛡 Role-Based · Fully Logged</div>
+          <div class="app-header"><div><div class="eyebrow">Platform Admin</div><h1>Appeals & Overrides</h1></div></div>
+          <div class="stat-strip">
+            <div class="stat"><div class="num" id="openAppealsCount">2</div><div class="lbl">Open</div></div>
+            <div class="stat"><div class="num">2.1</div><div class="lbl">Avg Days</div></div>
+          </div>
+          <div class="section-label">Pending appeals</div>
+          <div id="appealsContainer">
+            <!-- Reactively rendered -->
+          </div>
+        </div>
+
+        <!-- 50. ADMIN: IMMUTABLE AUDIT LOG (CIVIC) -->
+        <div class="screen" id="auditlog">
+          <div class="badge-authority">🛡 Cryptographic Audit Log</div>
+          <div class="app-header"><div><div class="eyebrow">Immutable Ledger</div><h1>Audit Log</h1></div></div>
+          <div class="filter-chip-row">
+            <div class="filter-chip on">All actions</div>
+            <div class="filter-chip">Appeals</div>
+            <div class="filter-chip">Verifications</div>
+            <div class="filter-chip">Disputes</div>
+          </div>
+          <div id="auditLogEntries">
+            <!-- Dynamically populated from store -->
+          </div>
+        </div>
+
+        <!-- 51. POLICE: PLATE / VIN LOOKUP (CIVIC) -->
+        <div class="screen" id="policelookup">
+          <div class="badge-authority">🛡 Law Enforcement Access</div>
+          <div class="app-header"><div><div class="eyebrow">Authorized Access Only</div><h1>Plate / VIN Lookup</h1></div></div>
+          <div class="field" style="display:flex; gap:6px;">
+            <input type="text" id="policePlateSearchInput" placeholder="Enter plate number (e.g. BJL 4471) or VIN" value="BJL 4471">
+            <div class="btn primary small" style="flex:none; padding:8px 14px;" onclick="searchPoliceRecord()">Lookup</div>
+          </div>
+          <div id="policeLookupResultBox">
+            <!-- Reactively populated -->
+          </div>
+          <div class="action-row"><div class="btn ghost" onclick="showToast('Check recorded with timestamp and badge #2210')">Log This Check</div><div class="btn primary" onclick="flagVehicleFromPolice()">Flag Vehicle</div></div>
+        </div>
+
+        <!-- 52. POLICE: STOLEN VEHICLE ALERTS (CIVIC) -->
+        <div class="screen" id="stolenalerts">
+          <div class="badge-authority">🛡 Broadcast Nationwide</div>
+          <div class="app-header"><div><div class="eyebrow">Law Enforcement Feed</div><h1>Stolen Vehicle Alerts</h1></div></div>
+          <div class="stat-strip">
+            <div class="stat"><div class="num" id="policeActiveStolenCount" style="color:var(--bad-fg);">2</div><div class="lbl">Active</div></div>
+            <div class="stat"><div class="num" id="policeRecoveredCount" style="color:var(--good-fg);">2</div><div class="lbl">Recovered</div></div>
+          </div>
+          <div class="section-label">Active nationwide stolen alerts</div>
+          <div id="stolenAlertsQueue">
+            <!-- Injected from store -->
+          </div>
+        </div>
+
+        <!-- 53. POLICE: ROADSIDE VERIFICATION (CIVIC) -->
+        <div class="screen" id="roadside">
+          <div class="badge-authority">🛡 Roadside Check</div>
+          <div class="app-header"><div><div class="eyebrow">Scanned Passport · Instant Result</div><h1>Roadside Verification</h1></div></div>
+          <div class="vin-plate" style="margin-bottom:12px;">
+            <div class="make-model">Toyota Land Cruiser Prado TX</div>
+            <div class="meta-row"><div><b>BJL 4471</b>Plate</div><div><b>2019</b>Year</div></div>
+          </div>
+          <div id="roadsideChecksContainer">
+            <div class="verify-check"><div class="vmark pass">✓</div>Driver matches authorized user (Kaabu Corp)</div>
+            <div class="verify-check"><div class="vmark pass">✓</div>Valid Gamstar comprehensive insurance on record</div>
+            <div class="verify-check" id="roadsideStolenCheck"><div class="vmark pass">✓</div>Not reported stolen</div>
+            <div class="verify-check"><div class="vmark pass">✓</div>GRA Road tax paid through Dec 2026</div>
+          </div>
+          <div class="card" style="margin-top:12px;"><div class="row"><span class="k">Checked by</span><span class="v">Officer #2210 (Banjul Div)</span></div><div class="row"><span class="k">Timestamp</span><span class="v">Just now</span></div></div>
+          <div class="action-row"><div class="btn primary" onclick="showToast('Roadside check cleared — driver free to proceed.')">Clear — All Good</div></div>
+        </div>
+
+        <!-- 54. VIOLATION RESOLUTION (CIVIC) -->
+        <div class="screen" id="violation">
+          <div class="badge-authority">🛡 Violation Recorded</div>
+          <div class="app-header"><div><div class="eyebrow">Plate BJL 4471 · Traffic Citation</div><h1>Resolve Violation</h1></div></div>
+          <div class="card">
+            <div class="row"><span class="k">Issued by</span><span class="v">Officer #2210 (Remote Scan)</span></div>
+            <div class="row"><span class="k">Violation</span><span class="v">No-parking zone, Kairaba Ave</span></div>
+            <div class="row"><span class="k">Citation Amount</span><span class="v money" data-gmd="1750">D1,750</span></div>
+          </div>
+          <div class="section-label">Choose your resolution path</div>
+          <div class="role-card sel" onclick="selectViolationOption(this, 'fine')">
+            <div class="ricon">💳</div><div><div class="rname">Pay Fine via Mobile Money</div><div class="rsub money" data-gmd="1750">D1,750 · Instant receipt to court</div></div>
+          </div>
+          <div class="role-card" onclick="selectViolationOption(this, 'course')">
+            <div class="ricon">🎓</div><div><div class="rname">Complete In-App Driver Course</div><div class="rsub">5-min road safety refresher module — fine waived upon completion</div></div>
+          </div>
+          <div style="font-size:10px; color:var(--steel); margin:4px 0 12px; line-height:1.45;">Unresolved violations after 30 days trigger an automatic nationwide license suspension flag.</div>
+          <div class="action-row"><div class="btn primary" id="btnExecuteViolation" onclick="executeViolationResolution()">Proceed to Pay Fine</div></div>
+        </div>
+
+      </div><!-- /phone -->
+
+      <!-- DECK DESCRIPTIONS (SYNCHRONIZED PITCH NOTES) -->
+      <div class="deck-panel active" id="deck-garage">
+        <div class="deck-eyebrow">Vehicle Backbone</div>
+        <div class="deck-title">My Garage</div>
+        <div class="deck-body">
+          <p>The owner's mission control: every vehicle they own, current verified odometer readings, and immediate compliance/service status. A paper logbook never offered instant alerts when oil changes or timing belts were due.</p>
+          <p>Quick actions connect directly into the rest of the ecosystem: log mileage through Bluetooth OBD-II, request marketplace quotes, or broadcast a nationwide alert if a car is stolen.</p>
+        </div>
+        <div class="deck-meta-card">
+          <div class="deck-meta-row"><span class="deck-meta-k">Core Data Entity</span><span class="deck-meta-v">Vehicle Registry (VIN)</span></div>
+          <div class="deck-meta-row"><span class="deck-meta-k">State Reactivity</span><span class="deck-meta-v">Cross-synced with Passport</span></div>
+        </div>
+      </div>
+
+      <div class="deck-panel" id="deck-signup">
+        <div class="deck-eyebrow">Get Started</div>
+        <div class="deck-title">Unified Multi-Role Intake</div>
+        <div class="deck-body">
+          <p>Six distinct customer and civic account types share one unified sign-up pipeline: vehicle owner, collector, fleet operator, garage mechanic, parts vendor, and driver. Each role unlocks tailored features, but all interact with the same underlying vehicle and identity ledger.</p>
+          <p>Instead of fragmented apps, Street Code is one cohesive operating system with role-based lenses.</p>
+        </div>
+      </div>
+
+      <div class="deck-panel" id="deck-verify">
+        <div class="deck-eyebrow">Get Started</div>
+        <div class="deck-title">KYC & Business Verification</div>
+        <div class="deck-body">
+          <p>No mechanic, garage, or parts supplier goes live without verifiable proof of business registration and national identification. This forms the baseline trust anchor for a marketplace where car owners pay vendors online.</p>
+        </div>
+      </div>
+
+      <div class="deck-panel" id="deck-garageempty">
+        <div class="deck-eyebrow">Vehicle Backbone</div>
+        <div class="deck-title">Zero State Onboarding</div>
+        <div class="deck-body">
+          <p>The critical first screen for new users: even an older vehicle with no prior digital records begins its verified permanent history the moment it enters the system.</p>
+        </div>
+      </div>
+
+      <div class="deck-panel" id="deck-passport">
+        <div class="deck-eyebrow">Vehicle Backbone</div>
+        <div class="deck-title">The Vehicle Passport</div>
+        <div class="deck-body">
+          <p>The immutable, shareable single source of truth for a vehicle: complete ownership timeline, GRA road tax, customs port clearance, and verifiable service entries.</p>
+          <p>Entries are generated automatically as a byproduct of normal app usage (e.g. mechanics closing a job card), preventing counterfeit logs.</p>
+        </div>
+      </div>
+
+      <div class="deck-panel" id="deck-addvehicle">
+        <div class="deck-eyebrow">Vehicle Backbone</div>
+        <div class="deck-title">VIN Decoding Engine</div>
+        <div class="deck-body">
+          <p>Scan a VIN plate or windshield sticker using optical recognition or enter the 17 characters to instantly decode make, model, year, trim, and powertrain specifications.</p>
+        </div>
+      </div>
+
+      <div class="deck-panel" id="deck-reportstolen">
+        <div class="deck-eyebrow">Vehicle Backbone</div>
+        <div class="deck-title">Instant Stolen Alert Broadcast</div>
+        <div class="deck-body">
+          <p>A report filed by an owner does not sit in a backlog: it triggers a nationwide priority alert across all police terminals, roadside checkpoints, and civic dashboards in seconds.</p>
+        </div>
+      </div>
+
+      <div class="deck-panel" id="deck-insurance">
+        <div class="deck-eyebrow">Insurance & Protection</div>
+        <div class="deck-title">Digital Policy Vault</div>
+        <div class="deck-body">
+          <p>Insurance status is linked directly to the vehicle record. Expiration warnings surface before coverage lapses, protecting both owners and road users.</p>
+        </div>
+      </div>
+
+      <div class="deck-panel" id="deck-compareinsurers">
+        <div class="deck-eyebrow">Insurance & Protection</div>
+        <div class="deck-title">Broker Marketplace</div>
+        <div class="deck-body">
+          <p>Independent multi-carrier quotes side by side. Street Code remains a neutral broker, allowing owners to choose based on price and claims reputation.</p>
+        </div>
+      </div>
+
+      <div class="deck-panel" id="deck-protection">
+        <div class="deck-eyebrow">Insurance & Protection</div>
+        <div class="deck-title">Marketplace Escrow Protection</div>
+        <div class="deck-body">
+          <p>Trust is the product: repair and rental funds are locked safely in escrow and only released once the vehicle owner inspects and approves the delivered work.</p>
+        </div>
+      </div>
+
+      <div class="deck-panel" id="deck-claim">
+        <div class="deck-eyebrow">Insurance & Protection</div>
+        <div class="deck-title">In-App Claims Submission</div>
+        <div class="deck-body">
+          <p>Claims auto-populate with transaction, vehicle, and counterparty data. Uploading photo evidence and descriptions enables rapid 3-day resolution.</p>
+        </div>
+      </div>
+
+      <div class="deck-panel" id="deck-fleet">
+        <div class="deck-eyebrow">Fleet & Driver Ops · Civic</div>
+        <div class="deck-title">Fleet Command Center</div>
+        <div class="deck-body">
+          <p>Replaces chaotic paper spreadsheets with a unified operational dashboard tracking compliance deadlines, vehicle health, and operational expenditure.</p>
+        </div>
+      </div>
+
+      <div class="deck-panel" id="deck-staff">
+        <div class="deck-eyebrow">Fleet & Driver Ops · Civic</div>
+        <div class="deck-title">Driver Rostering & Licensing</div>
+        <div class="deck-body">
+          <p>Full driver records with automatic license expiry flags, preventing unlicensed commercial dispatches before vehicles leave the depot.</p>
+        </div>
+      </div>
+
+      <div class="deck-panel" id="deck-tracking">
+        <div class="deck-eyebrow">Fleet & Driver Ops · Civic</div>
+        <div class="deck-title">Pulse Live Telemetry</div>
+        <div class="deck-body">
+          <p>Real-time vehicle telemetry synced via Bluetooth OBD-II and GPS: speed, location, engine health, and proactive geofencing alerts.</p>
+        </div>
+      </div>
+
+      <div class="deck-panel" id="deck-capacity">
+        <div class="deck-eyebrow">Fleet & Driver Ops · Civic</div>
+        <div class="deck-title">Vehicle Capacity Board</div>
+        <div class="deck-body">
+          <p>A real-time state machine answering who has which vehicle, for what purpose, and who authorized it. Eliminates fleet asset ambiguity.</p>
+        </div>
+      </div>
+
+      <div class="deck-panel" id="deck-dispatch">
+        <div class="deck-eyebrow">Fleet & Driver Ops · Civic</div>
+        <div class="deck-title">Mission Dispatch Authorization</div>
+        <div class="deck-body">
+          <p>Four-step audit trail (Requested, Authorizing, Checked Out, Returned) ensuring formal chain-of-custody for every vehicle mission.</p>
+        </div>
+      </div>
+
+      <div class="deck-panel" id="deck-findgarage">
+        <div class="deck-eyebrow">Garage Marketplace</div>
+        <div class="deck-title">Geolocated Garage Directory</div>
+        <div class="deck-body">
+          <p>Interactive map and directory showcasing certified shops by distance, verified customer reviews, and mechanical specialties.</p>
+        </div>
+      </div>
+
+      <div class="deck-panel" id="deck-request">
+        <div class="deck-eyebrow">Garage Marketplace</div>
+        <div class="deck-title">Competitive Job Quotes</div>
+        <div class="deck-body">
+          <p>Post a job once to receive competitive quotes with price, turnaround time, and shop availability side by side.</p>
+        </div>
+      </div>
+
+      <div class="deck-panel" id="deck-gigs">
+        <div class="deck-eyebrow">Garage Marketplace</div>
+        <div class="deck-title">Mechanic Gig Economy</div>
+        <div class="deck-body">
+          <p>Enables independent and mobile mechanics to bid on open repair jobs, expanding earning power across the informal economy.</p>
+        </div>
+      </div>
+
+      <div class="deck-panel" id="deck-jobcard">
+        <div class="deck-eyebrow">Garage Marketplace</div>
+        <div class="deck-title">Shop Floor Job Card</div>
+        <div class="deck-body">
+          <p>The shop's digital work order: photo diagnostics, parts used, labor hours, and milestone progression. Marking a job complete automatically writes to the vehicle's permanent passport!</p>
+        </div>
+      </div>
+
+      <div class="deck-panel" id="deck-messages">
+        <div class="deck-eyebrow">Garage Marketplace</div>
+        <div class="deck-title">Audited Messaging Thread</div>
+        <div class="deck-body">
+          <p>All communication is bound directly to the job card, serving as undeniable evidence if an escrow dispute arises.</p>
+        </div>
+      </div>
+
+      <div class="deck-panel" id="deck-review">
+        <div class="deck-eyebrow">Garage Marketplace</div>
+        <div class="deck-title">Verified Ratings Loop</div>
+        <div class="deck-body">
+          <p>Reviews can only be left by customers with completed, paid job cards, eliminating fake reviews and rewarding honest mechanics.</p>
+        </div>
+      </div>
+
+      <div class="deck-panel" id="deck-partsearch">
+        <div class="deck-eyebrow">Parts Sourcing</div>
+        <div class="deck-title">Fitment-Filtered Parts Search</div>
+        <div class="deck-body">
+          <p>Filters exclusively for parts that match the vehicle's exact VIN, preventing the common failure mode of buying incorrect components.</p>
+        </div>
+      </div>
+
+      <div class="deck-panel" id="deck-parts">
+        <div class="deck-eyebrow">Parts Sourcing</div>
+        <div class="deck-title">Multi-Tier Parts Catalog</div>
+        <div class="deck-body">
+          <p>Genuine OEM, high-quality aftermarket, and certified recycled parts compared side by side with live stock availability.</p>
+        </div>
+      </div>
+
+      <div class="deck-panel" id="deck-checkout">
+        <div class="deck-eyebrow">Parts Sourcing</div>
+        <div class="deck-title">Mobile Money Checkout</div>
+        <div class="deck-body">
+          <p>Seamless checkout native to West Africa: Afrimoney and QMoney mobile money push rails with card fallback.</p>
+        </div>
+      </div>
+
+      <div class="deck-panel" id="deck-scantool">
+        <div class="deck-eyebrow">Diagnostics & Tools</div>
+        <div class="deck-title">Bluetooth OBD-II Pairing</div>
+        <div class="deck-body">
+          <p>Turns any smartphone into a commercial-grade diagnostic tool via wireless OBD-II scanner integration.</p>
+        </div>
+      </div>
+
+      <div class="deck-panel" id="deck-faultcodes">
+        <div class="deck-eyebrow">Diagnostics & Tools</div>
+        <div class="deck-title">DTC Diagnostic Engine</div>
+        <div class="deck-body">
+          <p>Identifies Diagnostic Trouble Codes with severity ratings and lets users push exact codes into quote requests with a single tap.</p>
+        </div>
+      </div>
+
+      <div class="deck-panel" id="deck-browsemobility">
+        <div class="deck-eyebrow">Mobility</div>
+        <div class="deck-title">P2P Car Sharing</div>
+        <div class="deck-body">
+          <p>Rent verified vehicles with full service histories, backed by Street Code Civic identity verification.</p>
+        </div>
+      </div>
+
+      <div class="deck-panel" id="deck-mobility">
+        <div class="deck-eyebrow">Mobility</div>
+        <div class="deck-title">Multi-Modal Vehicle Booking</div>
+        <div class="deck-body">
+          <p>Flexible mobility options: daily rentals, point-to-point town rides, or multi-month commercial leases.</p>
+        </div>
+      </div>
+
+      <div class="deck-panel" id="deck-confirmed">
+        <div class="deck-eyebrow">Mobility</div>
+        <div class="deck-title">Booking Confirmation</div>
+        <div class="deck-body">
+          <p>Clear guidance on vehicle handover, condition check-ins, and return deadlines with funds secured in escrow.</p>
+        </div>
+      </div>
+
+      <div class="deck-panel" id="deck-riderequest">
+        <div class="deck-eyebrow">Mobility</div>
+        <div class="deck-title">Driver Ride Dispatch</div>
+        <div class="deck-body">
+          <p>Driver-side interface with transparent upfront fares, trip distance, and an active acceptance timer.</p>
+        </div>
+      </div>
+
+      <div class="deck-panel" id="deck-tripprogress">
+        <div class="deck-eyebrow">Mobility</div>
+        <div class="deck-title">Live Trip Progression</div>
+        <div class="deck-body">
+          <p>Turn-by-turn route tracking and ETA updates shared securely between driver, rider, and trusted contacts.</p>
+        </div>
+      </div>
+
+      <div class="deck-panel" id="deck-tripearnings">
+        <div class="deck-eyebrow">Mobility</div>
+        <div class="deck-title">Instant Driver Payout</div>
+        <div class="deck-body">
+          <p>Transparent fee deduction (7% platform commission) with instant payout directly to the driver's mobile money wallet.</p>
+        </div>
+      </div>
+
+      <div class="deck-panel" id="deck-browselistings">
+        <div class="deck-eyebrow">Vehicle Sales Marketplace</div>
+        <div class="deck-title">Verified Marketplace Listings</div>
+        <div class="deck-body">
+          <p>Used car sales backed by verifiable service passports, eliminating odometer tampering and undisclosed accident damage.</p>
+        </div>
+      </div>
+
+      <div class="deck-panel" id="deck-listvehicle">
+        <div class="deck-eyebrow">Vehicle Sales Marketplace</div>
+        <div class="deck-title">Instant Passport Listing</div>
+        <div class="deck-body">
+          <p>Sellers auto-generate trusted listings directly from their existing digital vehicle passports in seconds.</p>
+        </div>
+      </div>
+
+      <div class="deck-panel" id="deck-dealerinventory">
+        <div class="deck-eyebrow">Vehicle Sales Marketplace</div>
+        <div class="deck-title">Dealership Management</div>
+        <div class="deck-body">
+          <p>Dealer stock management tracking inventory valuations, pending offers, and sales velocity in real time.</p>
+        </div>
+      </div>
+
+      <div class="deck-panel" id="deck-services">
+        <div class="deck-eyebrow">Utilities & Services</div>
+        <div class="deck-title">Essential Roadside Utilities</div>
+        <div class="deck-body">
+          <p>Locate nearby petrol, EV charging hubs, tyre puncture repair shops, panel beaters, and 24-hour towing services.</p>
+        </div>
+      </div>
+
+      <div class="deck-panel" id="deck-routes">
+        <div class="deck-eyebrow">Utilities & Services</div>
+        <div class="deck-title">Smart Turn-by-Turn Routing</div>
+        <div class="deck-body">
+          <p>Optimized travel routes highlighting convenient pitstops along your journey without requiring app switching.</p>
+        </div>
+      </div>
+
+      <div class="deck-panel" id="deck-culture">
+        <div class="deck-eyebrow">Car Culture</div>
+        <div class="deck-title">Enthusiast Community Feed</div>
+        <div class="deck-body">
+          <p>The daily engagement engine: project car builds, dyno logs, local meetups, and safety recall broadcasts.</p>
+        </div>
+      </div>
+
+      <div class="deck-panel" id="deck-collection">
+        <div class="deck-eyebrow">Car Culture</div>
+        <div class="deck-title">Vehicle Portfolio Valuation</div>
+        <div class="deck-body">
+          <p>Treats vehicles as appreciating asset portfolios with historical valuation tracking and equity breakdown charts.</p>
+        </div>
+      </div>
+
+      <div class="deck-panel" id="deck-pubprofile">
+        <div class="deck-eyebrow">Car Culture</div>
+        <div class="deck-title">Public Enthusiast Profile</div>
+        <div class="deck-body">
+          <p>Showcase project builds, restoration reels, and verified provenance records to the broader automotive community.</p>
+        </div>
+      </div>
+
+      <div class="deck-panel" id="deck-event">
+        <div class="deck-eyebrow">Car Culture</div>
+        <div class="deck-title">Community Meets & Events</div>
+        <div class="deck-body">
+          <p>Verified automotive meetups with live attendee RSVPs and local parts/garage sponsorships.</p>
+        </div>
+      </div>
+
+      <div class="deck-panel" id="deck-notifications">
+        <div class="deck-eyebrow">Account & Infrastructure</div>
+        <div class="deck-title">Centralized Notification Hub</div>
+        <div class="deck-body">
+          <p>Unified alert center consolidating compliance reminders, job card updates, parts delivery tracking, and messages.</p>
+        </div>
+      </div>
+
+      <div class="deck-panel" id="deck-payments">
+        <div class="deck-eyebrow">Account & Infrastructure</div>
+        <div class="deck-title">Platform Wallet & Payouts</div>
+        <div class="deck-body">
+          <p>Financial ledger supporting instant mobile money cashouts to Afrimoney and QMoney with zero delay.</p>
+        </div>
+      </div>
+
+      <div class="deck-panel" id="deck-paymethods">
+        <div class="deck-eyebrow">Account & Infrastructure</div>
+        <div class="deck-title">Payment Method Rails</div>
+        <div class="deck-body">
+          <p>Manage linked mobile money wallets and payment cards with encrypted authorization tokens.</p>
+        </div>
+      </div>
+
+      <div class="deck-panel" id="deck-settings">
+        <div class="deck-eyebrow">Account & Infrastructure</div>
+        <div class="deck-title">Privacy & Currency Controls</div>
+        <div class="deck-body">
+          <p>Granular controls for live telemetry sharing, profile visibility, and instant multi-currency conversion across GMD, USD, EUR, and GBP.</p>
+        </div>
+      </div>
+
+      <div class="deck-panel" id="deck-adminqueue">
+        <div class="deck-eyebrow">Platform Admin · Civic</div>
+        <div class="deck-title">KYC Document Verification</div>
+        <div class="deck-body">
+          <p>Administrative review console ensuring strict compliance standards before garages and suppliers are licensed to trade.</p>
+        </div>
+      </div>
+
+      <div class="deck-panel" id="deck-admindispute">
+        <div class="deck-eyebrow">Platform Admin · Civic</div>
+        <div class="deck-title">Escrow Dispute Court</div>
+        <div class="deck-body">
+          <p>Impartial dispute resolution examining chat threads, invoices, and diagnostic photos before releasing funds.</p>
+        </div>
+      </div>
+
+      <div class="deck-panel" id="deck-appeals">
+        <div class="deck-eyebrow">Platform Admin · Civic</div>
+        <div class="deck-title">Administrative Appeals</div>
+        <div class="deck-body">
+          <p>Due-process portal for contesting citations or suspension flags. Every ruling requires a stated rationale.</p>
+        </div>
+      </div>
+
+      <div class="deck-panel" id="deck-auditlog">
+        <div class="deck-eyebrow">Platform Admin · Civic</div>
+        <div class="deck-title">Immutable Audit Trail</div>
+        <div class="deck-body">
+          <p>Permanent, non-editable event log recording all administrative overrides, verifications, and rulings for judicial scrutiny.</p>
+        </div>
+      </div>
+
+      <div class="deck-panel" id="deck-policelookup">
+        <div class="deck-eyebrow">Law Enforcement Access · Civic</div>
+        <div class="deck-title">Plate & VIN Verification</div>
+        <div class="deck-body">
+          <p>Rapid scan returning registration status, insurance validity, road tax compliance, and stolen flags in seconds.</p>
+        </div>
+      </div>
+
+      <div class="deck-panel" id="deck-stolenalerts">
+        <div class="deck-eyebrow">Law Enforcement Access · Civic</div>
+        <div class="deck-title">Nationwide Stolen Alert Feed</div>
+        <div class="deck-body">
+          <p>Real-time tactical feed of stolen vehicles broadcast across all patrol officers with one-tap recovery confirmation.</p>
+        </div>
+      </div>
+
+      <div class="deck-panel" id="deck-roadside">
+        <div class="deck-eyebrow">Law Enforcement Access · Civic</div>
+        <div class="deck-title">Roadside Checkpoint Protocol</div>
+        <div class="deck-body">
+          <p>Instant pass/fail checklist at traffic stops, reducing roadside stop duration from minutes to seconds.</p>
+        </div>
+      </div>
+
+      <div class="deck-panel" id="deck-violation">
+        <div class="deck-eyebrow">Law Enforcement Access · Civic</div>
+        <div class="deck-title">Violation Resolution Engine</div>
+        <div class="deck-body">
+          <p>Progressive justice system: choose between paying fines via mobile money or completing an interactive safety refresher module to waive the fine.</p>
+        </div>
+      </div>
+
+    </div><!-- /stage-row -->
+  </div><!-- /stage -->
+</div><!-- /app -->
+
+<!-- TOAST NOTIFICATION CONTAINER -->
+<div class="toast" id="appToast">Notification message</div>
+
+<!-- MOBILE MONEY PIN & APPROVAL SIMULATION MODAL -->
+<div class="modal-backdrop" id="momoModalBackdrop">
+  <div class="modal-box">
+    <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+      <span style="font-size:22px;">📱</span>
+      <div>
+        <div style="font-size:14px; font-weight:800;" id="momoModalProvider">Afrimoney Payment Push</div>
+        <div style="font-size:10px; color:var(--steel);">Secured Mobile Money Gateway</div>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:14px;">
+      <div class="row"><span class="k">Item</span><span class="v" id="momoModalItem">Parts Order #PO-8120</span></div>
+      <div class="row"><span class="k">Amount</span><span class="v money" id="momoModalAmount" data-gmd="5970">D5,970</span></div>
+      <div class="row"><span class="k">Phone</span><span class="v">+220 712 6621</span></div>
+    </div>
+    <div class="field">
+      <label>Enter 4-Digit Mobile Money PIN</label>
+      <input type="password" id="momoPinInput" maxlength="4" placeholder="••••" style="letter-spacing:0.3em; font-size:18px; text-align:center;">
+    </div>
+    <div class="action-row">
+      <div class="btn ghost" onclick="closeMomoModal()">Cancel</div>
+      <div class="btn primary" onclick="confirmMomoPayment()">Authorize Payment</div>
+    </div>
+  </div>
+</div>
+
+<!-- DRIVER REFRESHER COURSE MODAL (VIOLATION WAIVER) -->
+<div class="modal-backdrop" id="courseModalBackdrop">
+  <div class="modal-box">
+    <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
+      <span style="font-size:22px;">🎓</span>
+      <div>
+        <div style="font-size:14px; font-weight:800;">Road Safety Refresher Module</div>
+        <div style="font-size:10px; color:var(--steel);">Civic Driver Re-education (2 Questions)</div>
+      </div>
+    </div>
+    <div id="quizContent">
+      <div style="font-size:12px; font-weight:700; margin-bottom:8px;">Q1: On Kairaba Avenue, what does a solid red kerb marking indicate?</div>
+      <div class="role-card" onclick="this.classList.add('sel')" style="padding:8px; font-size:11px;">A. 15-minute loading only</div>
+      <div class="role-card" id="correctAnswer1" onclick="selectQuizCorrect(this)" style="padding:8px; font-size:11px;">B. No stopping or parking at any time</div>
+      <div class="role-card" onclick="this.classList.add('sel')" style="padding:8px; font-size:11px;">C. Free parking on weekends</div>
+    </div>
+    <div class="action-row" style="margin-top:14px;">
+      <div class="btn ghost" onclick="closeCourseModal()">Exit</div>
+      <div class="btn primary" id="btnSubmitQuiz" onclick="submitQuizCourse()" style="opacity:0.5; pointer-events:none;">Submit Answers & Clear Citation</div>
+    </div>
+  </div>
+</div>
+
+<!-- REPAIR COMPLETED MODAL -->
+<div class="modal-backdrop" id="repairDoneModalBackdrop">
+  <div class="modal-box">
+    <div style="text-align:center; padding:10px 0;">
+      <div style="font-size:38px; margin-bottom:8px;">✅</div>
+      <h2 style="font-family:'Oswald',sans-serif; font-size:22px; font-weight:700;">Job Card #2291 Closed!</h2>
+      <p style="font-size:12px; color:var(--steel); margin:8px 0 16px;">
+        1. A permanent service milestone was signed into the <b>Vehicle Passport</b>.<br>
+        2. Garage payout of <b class="money" data-gmd="9500">D9,500</b> was deposited into your Wallet.<br>
+        3. Vehicle maintenance status updated to <b>Up to date</b>.
+      </p>
+      <div class="action-row">
+        <div class="btn primary" onclick="closeRepairModalAndGo('passport')">Inspect Passport Ledger</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- JAVASCRIPT: UNIFIED STATE ARCHITECTURE -->
+<script>
+/**
+ * STREET CODE UNIFIED DATA ENGINE (STREETCODESTORE)
+ * Central reactive store with LocalStorage persistence & Cross-Pillar reactivity.
+ */
+const StreetCodeStore = {
+  data: {
+    currency: 'GMD',
+    rates: { GMD: 1, USD: 1/70, EUR: 1/76, GBP: 1/90 },
+    symbols: { GMD: 'D', USD: '$', EUR: '€', GBP: '£' },
+    walletBalance: 28875,
+    stolenActive: false,
+    stolenVehicle: null,
+    jobCardState: 'in_progress',
+    vehicles: [
+      {
+        id: 'v1',
+        makeModel: '2019 Toyota Land Cruiser Prado TX',
+        vin: 'JTMHY7AJXK4X2091',
+        plate: 'BJL 4471',
+        mileage: 41205,
+        status: 'due',
+        statusLabel: 'Service due',
+        trim: 'Prado TX',
+        year: 2019
+      },
+      {
+        id: 'v2',
+        makeModel: '2022 Honda CR-V EX-L',
+        vin: '5J6RW2H80NA7C1183',
+        plate: 'BJL 9013',
+        mileage: 12880,
+        status: 'ok',
+        statusLabel: 'Up to date',
+        trim: 'EX-L',
+        year: 2022
+      }
+    ],
+    serviceHistory: [
+      { title: 'Brake pads replaced + rotor inspection', shop: 'Timbooba Motors', date: 'Just now', mileage: '41,205 mi', cost: 9500 },
+      { title: 'Full service — 40k inspection', shop: 'Timbooba Motors', date: 'June 2026', mileage: '38,900 mi', cost: 12600 },
+      { title: 'Oil + filter change', shop: 'Kombo Auto Care', date: 'Nov 2025', mileage: '31,400 mi', cost: 2800 }
+    ],
+    notifications: [
+      { icon: '🔧', title: 'Timbooba Motors updated Job #2291', sub: 'Brake pads installed — awaiting inspection', time: '10m ago' },
+      { icon: '⚠', title: 'Van 11 insurance expires in 3 days', sub: 'Fleet compliance alert', time: '2h ago' },
+      { icon: '💬', title: 'New message from Timbooba Motors', sub: '"On it. Should be done by 4pm…"', time: '3h ago' },
+      { icon: '♥', title: 'A. Jallow liked your build post', sub: 'Corolla AE86 dyno day', time: '1d ago' },
+      { icon: '📦', title: 'Parts order #PO-8120 shipped', sub: 'Kombo Parts Depot · arriving today', time: '1d ago' }
+    ],
+    parts: [
+      { id: 'p1', name: 'Front brake pad set', type: 'OEM', brand: 'Toyota Genuine', supplier: 'AutoWorld Supply', price: 4300 },
+      { id: 'p2', name: 'Cabin air filter', type: 'OEM', brand: 'Toyota Genuine', supplier: 'Kombo Parts Depot', price: 1250 },
+      { id: 'p3', name: 'Alternator belt', type: 'OEM', brand: 'Toyota Genuine', supplier: 'AutoWorld Supply', price: 2400 },
+      { id: 'p4', name: 'Rear shock absorbers (pair)', type: 'Aftermarket', brand: 'Monroe Heavy Duty', supplier: 'Serrekunda Auto', price: 14700 }
+    ],
+    adminQueue: [
+      { id: 'q1', name: 'Serrekunda Auto Parts', type: 'Supplier', sub: 'License uploaded · Submitted 4 hrs ago' },
+      { id: 'q2', name: 'B. Sanneh', type: 'Independent Mechanic', sub: 'National ID uploaded · Submitted 1 day ago' },
+      { id: 'q3', name: 'GreenLine Rentals', type: 'Mobility Fleet', sub: 'Missing insurance doc · Submitted 2 days ago' }
+    ],
+    appeals: [
+      { id: 'ap1', title: 'Wrongful parking citation — BJL 4471', type: 'Violation', meta: 'Filed by Kaabu Corp · Officer #2210', reason: 'Was parked in a permitted loading bay — photo attached.' },
+      { id: 'ap2', title: 'License suspension review — M. Ceesay', type: 'Suspension', meta: 'Filed by driver · Auto-flagged', reason: 'Citation paid same day via Afrimoney ref. AF-99120.' }
+    ],
+    auditLogs: [
+      { time: 'Today 10:42', actor: 'Admin: F. Sanneh', action: 'Appeal upheld', detail: 'Violation BJL 4471 cleared — signage confirmed permitted loading zone.' },
+      { time: 'Today 09:15', actor: 'System', action: 'Appeal filed', detail: 'M. Ceesay contested suspension — routed to review queue.' },
+      { time: 'Yesterday 16:30', actor: 'Admin: F. Sanneh', action: 'KYC verified', detail: 'Serrekunda Auto Parts — business license confirmed valid.' },
+      { time: 'Yesterday 14:02', actor: 'Admin: A. Bojang', action: 'Dispute resolved', detail: 'Case #418 — released D14,700 to garage, substitution approved.' }
+    ]
+  },
+
+  init() {
+    const saved = localStorage.getItem('StreetCodeOS_State');
+    if (saved) {
+      try { this.data = JSON.parse(saved); } catch(e) { console.error(e); }
+    }
+    this.renderAll();
+  },
+
+  save() {
+    localStorage.setItem('StreetCodeOS_State', JSON.stringify(this.data));
+    this.renderAll();
+  },
+
+  resetDemoData() {
+    localStorage.removeItem('StreetCodeOS_State');
+    showToast('Demo state reset to clean factory defaults');
+    setTimeout(() => location.reload(), 300);
+  },
+
+  renderAll() {
+    this.renderCurrencies();
+    this.renderGarage();
+    this.renderPassport();
+    this.renderNotifications();
+    this.renderParts();
+    this.renderAdminQueue();
+    this.renderAppeals();
+    this.renderAuditLogs();
+    this.renderStolenBanner();
+    this.renderPoliceLookup();
+  },
+
+  formatMoney(gmdAmount) {
+    const curr = this.data.currency;
+    const rate = this.data.rates[curr];
+    const sym = this.data.symbols[curr];
+    const val = (gmdAmount * rate);
+    if (curr === 'GMD') {
+      return `${sym}${Math.round(val).toLocaleString()}`;
+    }
+    return `${sym}${val.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+  },
+
+  renderCurrencies() {
+    document.querySelectorAll('.money').forEach(el => {
+      const gmd = parseFloat(el.dataset.gmd);
+      if (!isNaN(gmd)) {
+        el.textContent = this.formatMoney(gmd);
+      }
+    });
+    const currSel = document.getElementById('currSelect');
+    if (currSel) currSel.value = this.data.currency;
+    const settTog = document.querySelectorAll('#settingsCurrToggle .opt');
+    settTog.forEach(o => {
+      o.classList.toggle('on', o.textContent.trim() === this.data.currency);
+    });
+  },
+
+  renderGarage() {
+    const list = document.getElementById('garageVehicleList');
+    if (!list) return;
+    list.innerHTML = '';
+    this.data.vehicles.forEach(v => {
+      const plateEl = document.createElement('div');
+      plateEl.className = 'vin-plate';
+      plateEl.onclick = () => activateScreen('passport');
+      plateEl.style.cursor = 'pointer';
+
+      let chipClass = v.status === 'due' ? 'due' : v.status === 'bad' ? 'bad' : v.status === 'stolen' ? 'bad' : 'ok';
+      let chipText = v.status === 'stolen' ? 'REPORTED STOLEN' : v.statusLabel;
+
+      plateEl.innerHTML = `
+        <span class="status-chip ${chipClass}">${chipText}</span>
+        <div class="make-model">${v.makeModel}</div>
+        <div class="meta-row">
+          <div><b>${v.mileage.toLocaleString()} mi</b>Mileage</div>
+          <div><b>${v.trim}</b>Trim</div>
+        </div>
+        <div class="vin-row"><span>VIN ${v.vin.slice(0,8)}...${v.vin.slice(-6)}</span><span>View Passport →</span></div>
+      `;
+      list.appendChild(plateEl);
+    });
+
+    const vCount = document.getElementById('statVehiclesCount');
+    if (vCount) vCount.textContent = this.data.vehicles.length;
+    const dCount = document.getElementById('statDueCount');
+    if (dCount) dCount.textContent = this.data.vehicles.filter(v => v.status === 'due' || v.status === 'stolen').length;
+  },
+
+  renderPassport() {
+    const passList = document.getElementById('passportServiceTimeline');
+    if (!passList) return;
+    passList.innerHTML = '';
+    this.data.serviceHistory.forEach(s => {
+      const item = document.createElement('div');
+      item.className = 'timeline-item';
+      item.innerHTML = `
+        <div class="dot2"></div>
+        <div class="body">
+          <div class="title">${s.title} — ${s.shop}</div>
+          <div class="sub">${s.mileage} · ${s.date}</div>
+        </div>
+        <div class="amt money" data-gmd="${s.cost}">${this.formatMoney(s.cost)}</div>
+      `;
+      passList.appendChild(item);
+    });
+  },
+
+  renderNotifications() {
+    const cont = document.getElementById('notificationsContainer');
+    if (!cont) return;
+    cont.innerHTML = '';
+    this.data.notifications.forEach(n => {
+      const row = document.createElement('div');
+      row.className = 'notif';
+      row.innerHTML = `
+        <div class="nicon">${n.icon}</div>
+        <div>
+          <div class="ntitle">${n.title}</div>
+          <div class="nsub">${n.sub}</div>
+        </div>
+        <div class="ntime">${n.time}</div>
+      `;
+      cont.appendChild(row);
+    });
+  },
+
+  renderParts() {
+    const list = document.getElementById('partsCatalogItems');
+    if (!list) return;
+    list.innerHTML = '';
+    this.data.parts.forEach(p => {
+      const div = document.createElement('div');
+      div.className = 'part';
+      div.innerHTML = `
+        <div>
+          <div class="pname">${p.name} <span class="fit-badge">Fits</span></div>
+          <div class="psub">${p.brand} · ${p.supplier} (${p.type})</div>
+        </div>
+        <div class="pprice money" data-gmd="${p.price}">${this.formatMoney(p.price)}</div>
+      `;
+      list.appendChild(div);
+    });
+  },
+
+  renderAdminQueue() {
+    const qList = document.getElementById('adminQueueList');
+    if (!qList) return;
+    qList.innerHTML = '';
+    this.data.adminQueue.forEach(item => {
+      const qRow = document.createElement('div');
+      qRow.className = 'queue-row';
+      qRow.innerHTML = `
+        <div class="qtop"><span class="qname">${item.name}</span><span class="qtype">${item.type}</span></div>
+        <div style="font-size:10px; color:var(--steel); margin-top:2px;">${item.sub}</div>
+        <div class="qactions">
+          <div class="btn ghost" onclick="showToast('Docs for ${item.name} opened')">Review Docs</div>
+          <div class="btn primary" onclick="approveQueueVendor('${item.id}', '${item.name}')">Approve KYC</div>
+        </div>
+      `;
+      qList.appendChild(qRow);
+    });
+    const pCount = document.getElementById('adminPendingCount');
+    if (pCount) pCount.textContent = this.data.adminQueue.length;
+  },
+
+  renderAppeals() {
+    const appCont = document.getElementById('appealsContainer');
+    if (!appCont) return;
+    appCont.innerHTML = '';
+    this.data.appeals.forEach(ap => {
+      const card = document.createElement('div');
+      card.className = 'queue-row';
+      card.innerHTML = `
+        <div class="qtop"><span class="qname">${ap.title}</span><span class="qtype">${ap.type}</span></div>
+        <div style="font-size:10px; color:var(--steel); margin:2px 0 6px;">${ap.meta}</div>
+        <div style="background:#fff; border:1px solid #C9C6BC; border-radius:6px; padding:7px; font-size:11px; margin-bottom:8px;">
+          <label style="display:block; font-size:9px; text-transform:uppercase; color:var(--steel); font-weight:700;">Appellant reason:</label>
+          ${ap.reason}
+        </div>
+        <div class="qactions">
+          <div class="btn ghost" onclick="denyAppeal('${ap.id}')">Deny</div>
+          <div class="btn primary" onclick="upholdAppealAction('${ap.id}', '${ap.title}')">Uphold Appeal</div>
+        </div>
+      `;
+      appCont.appendChild(card);
+    });
+    const cEl = document.getElementById('openAppealsCount');
+    if (cEl) cEl.textContent = this.data.appeals.length;
+  },
+
+  renderAuditLogs() {
+    const logEl = document.getElementById('auditLogEntries');
+    if (!logEl) return;
+    logEl.innerHTML = '';
+    this.data.auditLogs.forEach(l => {
+      const row = document.createElement('div');
+      row.className = 'audit-entry';
+      row.innerHTML = `
+        <div class="atime">${l.time}</div>
+        <div class="abody">
+          <div class="aaction"><span class="aactor">${l.actor}</span>${l.action}</div>
+          <div class="adetail">${l.detail}</div>
+        </div>
+      `;
+      logEl.appendChild(row);
+    });
+  },
+
+  renderStolenBanner() {
+    const banner = document.getElementById('nationwideAlert');
+    if (!banner) return;
+    if (this.data.stolenActive) {
+      banner.classList.add('active');
+    } else {
+      banner.classList.remove('active');
+    }
+  },
+
+  renderPoliceLookup() {
+    const resBox = document.getElementById('policeLookupResultBox');
+    if (!resBox) return;
+    const isStolen = this.data.stolenActive;
+    resBox.innerHTML = `
+      <div class="vin-plate">
+        <span class="status-chip ${isStolen ? 'bad' : 'ok'}">${isStolen ? '🚨 REPORTED STOLEN' : 'Clean record'}</span>
+        <div class="make-model">2019 Toyota Land Cruiser Prado TX</div>
+        <div class="meta-row"><div><b>BJL 4471</b>Plate</div><div><b>Kaabu Corp</b>Registered owner</div></div>
+        <div class="vin-row"><span>JTMHY7AJXK4X2091</span><span>Full record →</span></div>
+      </div>
+      <div class="verify-check"><div class="vmark pass">✓</div>Registration current (GRA)</div>
+      <div class="verify-check"><div class="vmark pass">✓</div>Insurance active (Gamstar Comprehensive)</div>
+      <div class="verify-check"><div class="vmark ${isStolen ? 'fail' : 'pass'}">${isStolen ? '✗' : '✓'}</div>${isStolen ? '<b style="color:var(--bad-fg)">NATIONWIDE STOLEN FLAG ACTIVE</b>' : 'Not reported stolen'}</div>
+      <div class="verify-check"><div class="vmark pass">✓</div>Road tax current (GRA)</div>
+      <div class="verify-check"><div class="vmark pass">✓</div>No outstanding citations</div>
+    `;
+
+    const qEl = document.getElementById('stolenAlertsQueue');
+    if (qEl) {
+      qEl.innerHTML = '';
+      if (isStolen) {
+        qEl.innerHTML += `
+          <div class="queue-row" style="border-left:4px solid #B22222;">
+            <div class="qtop"><span class="qname">Toyota Land Cruiser — BJL 4471</span><span class="qtype" style="color:#B22222; font-weight:800;">JUST REPORTED</span></div>
+            <div style="font-size:10px; color:var(--steel); margin:2px 0 6px;">Last seen: Senegambia Strip, Kololi · Owner: Kaabu Corp</div>
+            <div class="qactions"><div class="btn ghost" onclick="activateScreen('passport')">View Passport</div><div class="btn primary" onclick="recoverStolenVehicle()">Mark Recovered</div></div>
+          </div>
+        `;
+      }
+      qEl.innerHTML += `
+        <div class="queue-row">
+          <div class="qtop"><span class="qname">Honda CR-V — BJL 9013</span><span class="qtype">Reported 1d ago</span></div>
+          <div style="font-size:10px; color:var(--steel); margin:2px 0 6px;">Last seen: Serrekunda Market · Owner: F. Sanyang</div>
+          <div class="qactions"><div class="btn ghost" onclick="activateScreen('passport')">View Passport</div><div class="btn primary" onclick="showToast('Honda CR-V recovery protocol logged')">Mark Recovered</div></div>
+        </div>
+      `;
+    }
+  }
+};
+
+/**
+ * SCREEN ACTIVATION & SIBLING NAVIGATION
+ */
+const defaults = { consumer: 'garage', civic: 'fleet' };
+const sidebar = document.getElementById('mainSidebar');
+const siblingNav = document.getElementById('siblingNav');
+
+const categoryMap = {};
+document.querySelectorAll('.pillar-group').forEach(group => {
+  const category = group.querySelector('.pillar-title')?.textContent || '';
+  const items = Array.from(group.querySelectorAll('.nav-item')).map(el => ({
+    id: el.dataset.target,
+    label: el.textContent.trim()
+  }));
+  items.forEach(item => {
+    categoryMap[item.id] = { category, siblings: items };
+  });
+});
+
+function renderSiblingNav(targetId) {
+  const info = categoryMap[targetId];
+  siblingNav.innerHTML = '';
+  if (!info || info.siblings.length < 2) return;
+  info.siblings.forEach(sib => {
+    const pill = document.createElement('div');
+    pill.className = 'sib-pill' + (sib.id === targetId ? ' current' : '');
+    pill.textContent = sib.label;
+    pill.addEventListener('click', () => activateScreen(sib.id));
+    siblingNav.appendChild(pill);
+  });
+}
+
+function activateScreen(targetId) {
+  document.querySelectorAll('.nav-item').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.deck-panel').forEach(d => d.classList.remove('active'));
+
+  const screenEl = document.getElementById(targetId);
+  if (screenEl) screenEl.classList.add('active');
+
+  const deck = document.getElementById('deck-' + targetId);
+  if (deck) deck.classList.add('active');
+
+  const navItem = document.querySelector(`.nav-item[data-target="${targetId}"]`);
+  if (navItem) navItem.classList.add('active');
+
+  renderSiblingNav(targetId);
+  document.querySelector('.stage').scrollTop = 0;
+  closeSidebarOnMobile();
+}
+
+document.querySelectorAll('.nav-item').forEach(item => {
+  item.addEventListener('click', () => activateScreen(item.dataset.target));
+});
+
+document.querySelectorAll('.app-switch-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const mode = btn.dataset.app;
+    document.querySelectorAll('.app-switch-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    sidebar.dataset.mode = mode;
+    activateScreen(defaults[mode]);
+  });
+});
+
+// Mobile toggle
+const hamburger = document.getElementById('hamburger');
+const backdrop = document.getElementById('sidebarBackdrop');
+function closeSidebarOnMobile() {
+  sidebar.classList.remove('open');
+  backdrop.classList.remove('open');
+}
+hamburger.addEventListener('click', () => {
+  sidebar.classList.toggle('open');
+  backdrop.classList.toggle('open');
+});
+backdrop.addEventListener('click', closeSidebarOnMobile);
+
+// View mode switcher (Deck vs Mobile vs Console)
+document.querySelectorAll('.view-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const mode = btn.dataset.vmode;
+    document.body.classList.remove('view-mobile', 'view-console');
+    if (mode === 'mobile') document.body.classList.add('view-mobile');
+    if (mode === 'console') document.body.classList.add('view-console');
+  });
+});
+
+// Multi-Currency Selection
+document.getElementById('currSelect').addEventListener('change', (e) => {
+  setCurrency(e.target.value);
+});
+
+function setCurrency(curr) {
+  StreetCodeStore.data.currency = curr;
+  StreetCodeStore.save();
+  showToast(`Currency changed to ${curr}`);
+}
+
+// Toast helper
+function showToast(msg) {
+  const toast = document.getElementById('appToast');
+  toast.textContent = msg;
+  toast.style.display = 'block';
+  setTimeout(() => { toast.style.display = 'none'; }, 3000);
+}
+
+/**
+ * INTERACTIVE ACTIONS & CROSS-PILLAR WORKFLOWS
+ */
+function completeJobCardFloor() {
+  // 1. Advance stepper
+  document.getElementById('jcStepInProgress')?.classList.remove('current');
+  document.getElementById('jcStepInProgress')?.classList.add('done');
+  document.getElementById('jcStepComplete')?.classList.add('current', 'done');
+
+  // 2. Add service to passport
+  StreetCodeStore.data.serviceHistory.unshift({
+    title: 'Brake pads replaced + full inspection',
+    shop: 'Timbooba Motors',
+    date: 'Today',
+    mileage: '41,205 mi',
+    cost: 9500
+  });
+
+  // 3. Update vehicle status
+  const v = StreetCodeStore.data.vehicles.find(x => x.id === 'v1');
+  if (v) {
+    v.status = 'ok';
+    v.statusLabel = 'Up to date';
+  }
+
+  // 4. Wallet payout
+  StreetCodeStore.data.walletBalance += 9500;
+
+  // 5. Add Notification
+  StreetCodeStore.data.notifications.unshift({
+    icon: '✅',
+    title: 'Job #2291 Completed by Timbooba Motors',
+    sub: 'Permanent record signed into Vehicle Passport · D9,500',
+    time: 'Just now'
+  });
+
+  // 6. Audit log
+  StreetCodeStore.data.auditLogs.unshift({
+    time: 'Just now',
+    actor: 'Vendor: Timbooba',
+    action: 'Job card closed',
+    detail: 'Job #2291 completed — brake replacement verified and written to passport.'
+  });
+
+  StreetCodeStore.save();
+
+  // Show modal
+  document.getElementById('repairDoneModalBackdrop').style.display = 'flex';
+}
+
+function closeRepairModalAndGo(screen) {
+  document.getElementById('repairDoneModalBackdrop').style.display = 'none';
+  activateScreen(screen);
+}
+
+function submitStolenReport() {
+  const loc = document.getElementById('stolenLocation').value || 'Senegambia Strip';
+  StreetCodeStore.data.stolenActive = true;
+  const v = StreetCodeStore.data.vehicles.find(x => x.id === 'v1');
+  if (v) {
+    v.status = 'stolen';
+    v.statusLabel = 'REPORTED STOLEN';
+  }
+
+  StreetCodeStore.data.notifications.unshift({
+    icon: '🚨',
+    title: 'Nationwide Stolen Alert Active',
+    sub: `Toyota Land Cruiser (BJL 4471) reported stolen at ${loc}`,
+    time: 'Just now'
+  });
+
+  StreetCodeStore.data.auditLogs.unshift({
+    time: 'Just now',
+    actor: 'Owner: Kaabu Corp',
+    action: 'Vehicle reported stolen',
+    detail: `Nationwide broadcast issued for Land Cruiser BJL 4471 at ${loc}.`
+  });
+
+  StreetCodeStore.save();
+  showToast('🚨 Nationwide Police Alert Broadcast Activated!');
+  activateScreen('stolenalerts');
+}
+
+function recoverStolenVehicle() {
+  StreetCodeStore.data.stolenActive = false;
+  const v = StreetCodeStore.data.vehicles.find(x => x.id === 'v1');
+  if (v) {
+    v.status = 'ok';
+    v.statusLabel = 'Up to date';
+  }
+
+  StreetCodeStore.data.auditLogs.unshift({
+    time: 'Just now',
+    actor: 'Officer #2210',
+    action: 'Vehicle recovered',
+    detail: 'Toyota Land Cruiser (BJL 4471) marked recovered — nationwide alert cleared.'
+  });
+
+  StreetCodeStore.save();
+  showToast('Vehicle marked recovered. Stolen flag cleared nationwide.');
+}
+
+function pushFaultsToJobRequest() {
+  showToast('P0301 and P0442 fault telemetry attached to Quote Request');
+  activateScreen('request');
+}
+
+function simulateObdConnect(adapterName) {
+  showToast(`Paired with ${adapterName} over Bluetooth! Reading ECU...`);
+  document.getElementById('obdLiveOdo').textContent = '41,205 mi (Verified)';
+}
+
+function sendChatMessage() {
+  const inp = document.getElementById('chatMsgInput');
+  if (!inp || !inp.value.trim()) return;
+  const list = document.getElementById('chatThreadList');
+  const userBubble = document.createElement('div');
+  userBubble.className = 'bubble me';
+  userBubble.textContent = inp.value;
+  list.appendChild(userBubble);
+  const text = inp.value;
+  inp.value = '';
+
+  setTimeout(() => {
+    const themBubble = document.createElement('div');
+    themBubble.className = 'bubble them';
+    themBubble.textContent = 'Received! We have logged that update on the active Job Card.';
+    list.appendChild(themBubble);
+    list.scrollTop = list.scrollHeight;
+  }, 700);
+}
+
+// Mobile Money Modal
+let pendingMomoItem = '';
+let pendingMomoAmount = 0;
+function triggerMobileMoneyModal(item, amount) {
+  pendingMomoItem = item;
+  pendingMomoAmount = amount;
+  document.getElementById('momoModalItem').textContent = item;
+  document.getElementById('momoModalAmount').textContent = StreetCodeStore.formatMoney(amount);
+  document.getElementById('momoModalBackdrop').style.display = 'flex';
+}
+function closeMomoModal() {
+  document.getElementById('momoModalBackdrop').style.display = 'none';
+}
+function confirmMomoPayment() {
+  const pin = document.getElementById('momoPinInput').value;
+  if (!pin || pin.length < 4) {
+    showToast('Please enter a 4-digit PIN');
+    return;
+  }
+  closeMomoModal();
+  showToast('✅ Payment approved via Mobile Money! Receipt generated.');
+  StreetCodeStore.data.notifications.unshift({
+    icon: '💳',
+    title: `Payment Confirmed: ${pendingMomoItem}`,
+    sub: `Mobile Money debit of ${StreetCodeStore.formatMoney(pendingMomoAmount)} successful`,
+    time: 'Just now'
+  });
+  StreetCodeStore.save();
+  if (pendingMomoItem.includes('Parts')) {
+    activateScreen('garage');
+  }
+}
+
+// Ride-hail flow
+let rideTimer = null;
+let rideSeconds = 9;
+function acceptDriverRide() {
+  showToast('Ride accepted! GPS route navigation active.');
+  activateScreen('tripprogress');
+}
+function completeDriverTrip() {
+  StreetCodeStore.data.walletBalance += 558;
+  StreetCodeStore.save();
+  activateScreen('tripearnings');
+}
+function declineRide() {
+  showToast('Ride passed to next driver in queue');
+  activateScreen('garage');
+}
+
+// Booking flow
+function setTripMode(mode, el) {
+  document.querySelectorAll('#tripTypeToggle .opt').forEach(o => o.classList.remove('on'));
+  el.classList.add('on');
+  document.getElementById('rentalMode').style.display = mode === 'rental' ? 'block' : 'none';
+  document.getElementById('townMode').style.display = mode === 'town' ? 'block' : 'none';
+  document.getElementById('leaseMode').style.display = mode === 'lease' ? 'block' : 'none';
+}
+
+function confirmMobilityBooking() {
+  triggerMobileMoneyModal('CR-V Mobility Booking Deposit', 8630);
+  setTimeout(() => activateScreen('confirmed'), 800);
+}
+
+// Police check flow
+function searchPoliceRecord() {
+  showToast('Checking nationwide Police & GRA database...');
+  StreetCodeStore.renderPoliceLookup();
+}
+
+function flagVehicleFromPolice() {
+  showToast('Vehicle flagged for roadside inspection at next checkpoint');
+}
+
+// Violation Flow
+let selectedViolationAction = 'fine';
+function selectViolationOption(el, opt) {
+  document.querySelectorAll('#violation .role-card').forEach(c => c.classList.remove('sel'));
+  el.classList.add('sel');
+  selectedViolationAction = opt;
+  const btn = document.getElementById('btnExecuteViolation');
+  if (btn) {
+    btn.textContent = opt === 'fine' ? 'Proceed to Pay Fine' : 'Begin 5-Min Course';
+  }
+}
+function executeViolationResolution() {
+  if (selectedViolationAction === 'fine') {
+    triggerMobileMoneyModal('Traffic Citation Fine #BJL-4471', 1750);
+  } else {
+    document.getElementById('courseModalBackdrop').style.display = 'flex';
+  }
+}
+function selectQuizCorrect(el) {
+  el.classList.add('sel');
+  el.style.borderColor = 'var(--good)';
+  const sub = document.getElementById('btnSubmitQuiz');
+  sub.style.opacity = '1';
+  sub.style.pointerEvents = 'auto';
+}
+function closeCourseModal() {
+  document.getElementById('courseModalBackdrop').style.display = 'none';
+}
+function submitQuizCourse() {
+  closeCourseModal();
+  showToast('🎓 Score 100%! Course completed. Traffic citation waived.');
+  StreetCodeStore.data.auditLogs.unshift({
+    time: 'Just now',
+    actor: 'Civic Education',
+    action: 'Citation waived',
+    detail: 'Driver completed in-app safety module — violation BJL 4471 closed.'
+  });
+  StreetCodeStore.save();
+  activateScreen('garage');
+}
+
+// Admin approvals
+function approveQueueVendor(id, name) {
+  StreetCodeStore.data.adminQueue = StreetCodeStore.data.adminQueue.filter(x => x.id !== id);
+  StreetCodeStore.data.auditLogs.unshift({
+    time: 'Just now',
+    actor: 'Admin: You',
+    action: 'KYC approved',
+    detail: `${name} documents verified — business unlocked for trade.`
+  });
+  StreetCodeStore.save();
+  showToast(`KYC Approved for ${name}! Logged to Audit Log.`);
+}
+
+function resolveAdminDispute(caseId, decision) {
+  StreetCodeStore.data.auditLogs.unshift({
+    time: 'Just now',
+    actor: 'Admin: You',
+    action: decision === 'release' ? 'Dispute funds released' : 'Dispute funds refunded',
+    detail: `Case #${caseId} resolved — ${decision === 'release' ? 'D14,700 released to garage' : 'D14,700 refunded to customer'}.`
+  });
+  StreetCodeStore.save();
+  showToast(`Case #${caseId} resolved with decision: ${decision.toUpperCase()}`);
+  activateScreen('auditlog');
+}
+
+function upholdAppealAction(id, title) {
+  StreetCodeStore.data.appeals = StreetCodeStore.data.appeals.filter(x => x.id !== id);
+  StreetCodeStore.data.auditLogs.unshift({
+    time: 'Just now',
+    actor: 'Admin: You',
+    action: 'Appeal upheld',
+    detail: `${title} — granted upon photographic evidence.`
+  });
+  StreetCodeStore.save();
+  showToast('Appeal upheld and recorded into immutable audit log');
+}
+
+function denyAppeal(id) {
+  StreetCodeStore.data.appeals = StreetCodeStore.data.appeals.filter(x => x.id !== id);
+  StreetCodeStore.data.auditLogs.unshift({
+    time: 'Just now',
+    actor: 'Admin: You',
+    action: 'Appeal denied',
+    detail: 'Appeal rejected due to insufficient evidence.'
+  });
+  StreetCodeStore.save();
+  showToast('Appeal denied and closed');
+}
+
+function submitDispatchAuth() {
+  showToast('Vehicle dispatch #DS-491 authorized! Check-out confirmed.');
+  activateScreen('capacity');
+}
+
+function submitAddVehicle() {
+  const make = document.getElementById('decMake').textContent || 'Toyota Land Cruiser';
+  const vin = document.getElementById('newVinInput').value || 'JTMHY7AJXK4X2091';
+  const miles = parseInt(document.getElementById('newMileageInput').value) || 41205;
+
+  StreetCodeStore.data.vehicles.push({
+    id: 'v_' + Date.now(),
+    makeModel: make,
+    vin: vin,
+    plate: 'BJL ' + Math.floor(1000 + Math.random() * 9000),
+    mileage: miles,
+    status: 'ok',
+    statusLabel: 'Up to date',
+    trim: 'Standard',
+    year: 2021
+  });
+
+  StreetCodeStore.save();
+  showToast(`${make} added to your Garage!`);
+  activateScreen('garage');
+}
+
+function copyPassportLink() {
+  showToast('🔗 Public Vehicle Passport URL copied to clipboard');
+}
+
+function rsvpEvent() {
+  const el = document.getElementById('eventRsvpCount');
+  if (el) el.textContent = '63 people going (You are going ✓)';
+  showToast('RSVP confirmed! Added to your calendar.');
+}
+
+function publishVehicleListing() {
+  showToast('Listing published to Street Code Sales Marketplace with Verified Passport!');
+  activateScreen('browselistings');
+}
+
+function submitClaim() {
+  showToast('Claim #CL-902 submitted. Platform arbiter assigned.');
+  activateScreen('protection');
+}
+
+function submitKYC() {
+  showToast('Business documents uploaded. In verification queue.');
+  activateScreen('garage');
+}
+
+function submitReview() {
+  showToast('Review submitted! Thank you for rating Timbooba Motors.');
+  activateScreen('garage');
+}
+
+function clearAllNotifications() {
+  StreetCodeStore.data.notifications = [];
+  StreetCodeStore.save();
+  showToast('Notifications cleared');
+}
+
+function withdrawWalletFunds() {
+  StreetCodeStore.data.walletBalance = 0;
+  StreetCodeStore.save();
+  showToast('Payout initiated: funds transferred to your Afrimoney wallet.');
+}
+
+function acceptQuote(shop, cost) {
+  showToast(`Accepted quote from ${shop} (${StreetCodeStore.formatMoney(cost)})! Job Card opened.`);
+  activateScreen('jobcard');
+}
+
+function selectPayRail(el, rail) {
+  document.querySelectorAll('.paymethod').forEach(p => p.classList.remove('sel'));
+  el.classList.add('sel');
+}
+
+function selectRoleCard(el, role) {
+  document.querySelectorAll('#signup .role-card').forEach(r => r.classList.remove('sel'));
+  el.classList.add('sel');
+}
+
+function decodeVin(vin) {
+  if (!vin) return;
+  vin = vin.trim().toUpperCase();
+  if (vin.startsWith('JTM')) {
+    document.getElementById('decMake').textContent = 'Toyota Land Cruiser';
+    document.getElementById('decYear').textContent = '2019';
+    document.getElementById('decTrim').textContent = 'Prado TX';
+    document.getElementById('decEngine').textContent = '2.8L Turbo Diesel';
+  } else if (vin.startsWith('5J6')) {
+    document.getElementById('decMake').textContent = 'Honda CR-V';
+    document.getElementById('decYear').textContent = '2022';
+    document.getElementById('decTrim').textContent = 'EX-L';
+    document.getElementById('decEngine').textContent = '1.5L Turbo Petrol';
+  } else if (vin.startsWith('JN1')) {
+    document.getElementById('decMake').textContent = 'Nissan X-Trail';
+    document.getElementById('decYear').textContent = '2018';
+    document.getElementById('decTrim').textContent = 'Tekna';
+    document.getElementById('decEngine').textContent = '2.0L dCi';
+  }
+}
+
+function simulateVinOcrScan() {
+  showToast('📷 OCR Camera Active: Scanning windshield VIN barcode...');
+  setTimeout(() => {
+    document.getElementById('newVinInput').value = '5J6RW2H80NA7C1183';
+    decodeVin('5J6RW2H80NA7C1183');
+    showToast('✓ VIN decoded: 2022 Honda CR-V EX-L');
+  }, 900);
+}
+
+function selectInsurer(name, cost) {
+  showToast(`Selected ${name} (${StreetCodeStore.formatMoney(cost)}/mo). Preparing policy...`);
+}
+
+function filterPartType(type, el) {
+  document.querySelectorAll('#parts .role-toggle .opt').forEach(o => o.classList.remove('on'));
+  el.classList.add('on');
+  const items = document.querySelectorAll('#partsCatalogItems .part');
+  items.forEach(item => {
+    if (type === 'All' || item.textContent.includes(type)) {
+      item.style.display = 'flex';
+    } else {
+      item.style.display = 'none';
+    }
+  });
+}
+
+function filterPartsList(query) {
+  query = query.toLowerCase();
+  const items = document.querySelectorAll('#partsCatalogItems .part');
+  items.forEach(item => {
+    item.style.display = item.textContent.toLowerCase().includes(query) ? 'flex' : 'none';
+  });
+}
+
+function filterListings(type, el) {
+  document.querySelectorAll('#browselistings .role-toggle .opt').forEach(o => o.classList.remove('on'));
+  el.classList.add('on');
+}
+
+function filterServiceType(type, el) {
+  document.querySelectorAll('#services .filter-chip').forEach(c => c.classList.remove('on'));
+  el.classList.add('on');
+}
+
+function selectGaragePin(name, dist, rating) {
+  showToast(`Selected ${name} (${dist}, ${rating})`);
+  activateScreen('request');
+}
+
+function setRating(stars) {
+  const spans = document.querySelectorAll('#starRowRating span');
+  spans.forEach((s, idx) => {
+    s.classList.toggle('on', idx < stars);
+  });
+}
+
+// Initial bootstrap
+StreetCodeStore.init();
+activateScreen('garage');
+</script>
+
+</body>
+</html>

@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Street Code - National Automotive OS & Verified Provenance</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+  <!-- Top Alert Banner for Active Stolen Vehicles -->
+  <div id="apb-live-banner" style="display: none; background: rgba(220, 38, 38, 0.95); color: white; padding: 10px 20px; text-align: center; font-size: 0.9rem; font-family: var(--font-mono); border-bottom: 1px solid #ef4444;"></div>
+
+  <!-- Navigation Bar -->
+  <header class="navbar">
+    <a href="/" class="brand-group">
+      <div class="brand-icon">⚡</div>
+      <div>
+        <div class="brand-title">Street Code</div>
+        <div class="brand-sub">AUTOMOTIVE OS // GM</div>
+      </div>
+    </a>
+    <nav class="nav-links">
+      <a href="/" class="nav-link active">Home</a>
+      <a href="/passport-lookup.html" class="nav-link">Vehicle Passport</a>
+      <a href="/marketplace.html" class="nav-link">Garages & Parts</a>
+      <a href="/civic/" class="nav-btn">🛡️ Civic Command</a>
+      <a href="/mobile/" class="nav-btn nav-btn-primary">📱 Mobile App</a>
+    </nav>
+  </header>
+
+  <!-- Main Hero -->
+  <main class="container">
+    <section class="hero">
+      <div class="hero-pill">
+        <span class="hero-pill-pulse"></span>
+        <span>Verified Automotive Infrastructure • Republic of The Gambia</span>
+      </div>
+      <h1 class="hero-title">
+        The Automotive Operating System<br>For Verified Emerging Mobility
+      </h1>
+      <p class="hero-desc">
+        Eliminating odometer fraud, predatory repair quotes, and unsafe roadside stops with cryptographic vehicle provenance, African Mobile Money escrow, and live civic fleet intelligence.
+      </p>
+
+      <!-- Instant Search Box -->
+      <form id="search-form" class="search-box-card">
+        <input 
+          id="search-input" 
+          type="text" 
+          class="search-input" 
+          placeholder="Enter VIN or License Plate (e.g. BJL-4821-B, KM-7732-A)..." 
+          autocomplete="off"
+          required
+        >
+        <button type="submit" class="search-btn">
+          <span>Verify History</span>
+          <span>→</span>
+        </button>
+      </form>
+
+      <!-- Quick Search Chips -->
+      <div class="quick-tags">
+        <span>Try Demo Records:</span>
+        <a class="quick-chip" href="/passport-lookup.html?q=BJL-4821-B">BJL-4821-B (RAV4 Verified)</a>
+        <a class="quick-chip" href="/passport-lookup.html?q=WCR-1904-C">WCR-1904-C (Commercial Van)</a>
+        <a class="quick-chip" href="/passport-lookup.html?q=KM-7732-A" style="border-color: #f43f5e; color: #f43f5e;">KM-7732-A (Stolen APB)</a>
+        <a class="quick-chip" href="/passport-lookup.html?q=JT3HP10V2K5019284">VIN Lookup</a>
+      </div>
+    </section>
+
+    <!-- Real-time Fleet Telemetry Bar -->
+    <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; overflow-x: auto; margin-bottom: 2rem;">
+      <div style="display: flex; align-items: center; gap: 8px; font-size: 0.8rem; font-family: var(--font-mono); color: var(--accent-emerald); font-weight: 700; white-space: nowrap; margin-right: 20px;">
+        <span style="width: 8px; height: 8px; border-radius: 50%; background: #10b981; animation: pulse-ring 2s infinite;"></span>
+        LIVE GPS TELEMETRY:
+      </div>
+      <div id="live-fleet-ticker" style="white-space: nowrap; overflow: hidden; display: flex;">
+        <span style="color: var(--text-dim); font-size: 0.85rem;">Connecting to real-time vehicle telemetry stream...</span>
+      </div>
+    </div>
+
+    <!-- Aggregate Platform Metrics -->
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <div class="metric-label">Registered Fleet</div>
+        <div id="metric-vehicles" class="metric-val">--</div>
+        <div class="metric-sub">Commercial & Private Units</div>
+      </div>
+      <div class="metric-card emerald">
+        <div class="metric-label">Passport Blocks</div>
+        <div id="metric-blocks" class="metric-val">--</div>
+        <div class="metric-sub">SHA-256 Cryptographically Chained</div>
+      </div>
+      <div class="metric-card amber">
+        <div class="metric-label">Mobile Money Escrow</div>
+        <div id="metric-momo" class="metric-val">--</div>
+        <div class="metric-sub">Protected via Afrimoney & QMoney</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Workshop Capacity</div>
+        <div id="metric-workshops" class="metric-val">--</div>
+        <div class="metric-sub">Active Bay Utilization</div>
+      </div>
+    </div>
+
+    <!-- Core Architectural Pillars -->
+    <section style="margin: 4rem 0;">
+      <div class="section-header">
+        <h2 class="section-title">Engineered for Emerging Market Realities</h2>
+        <p class="section-subtitle">Solving 6 systemic mobility bottlenecks across West Africa</p>
+      </div>
+
+      <div class="features-grid">
+        <!-- Feature 1 -->
+        <div class="feature-card">
+          <div class="feature-icon-badge">⛓️</div>
+          <h3 class="feature-title">Immutable Vehicle Passport</h3>
+          <p class="feature-desc">
+            Every inspection, oil change, customs import, and police clearance is signed and SHA-256 hash-chained. Mathematical rollback detection guarantees true mileage and eliminates odometer fraud.
+          </p>
+        </div>
+
+        <!-- Feature 2 -->
+        <div class="feature-card">
+          <div class="feature-icon-badge">📱</div>
+          <h3 class="feature-title">Native African Mobile Money Escrow</h3>
+          <p class="feature-desc">
+            Direct USSD push to Africell (Afrimoney) and QCell (QMoney) subscribers. Funds stay safely held in escrow until customers or fleet managers sign off on quality shop repairs.
+          </p>
+        </div>
+
+        <!-- Feature 3 -->
+        <div class="feature-card">
+          <div class="feature-icon-badge">🔌</div>
+          <h3 class="feature-title">Universal ELM327 OBD-II Driver</h3>
+          <p class="feature-desc">
+            Decodes Mode 01 real-time engine telemetry (RPM, Speed, Coolant Temp, Fuel Load) and Mode 03 Diagnostic Trouble Codes from standard $10 Bluetooth adapters right on mobile handsets.
+          </p>
+        </div>
+
+        <!-- Feature 4 -->
+        <div class="feature-card">
+          <div class="feature-icon-badge">🛡️</div>
+          <h3 class="feature-title">Procedural Police Search Logging</h3>
+          <p class="feature-desc">
+            Officers log vehicle plates, location checkpoints, and statutory justifications before conducting roadside stops. Builds mutual community trust and a transparent chain of custody.
+          </p>
+        </div>
+
+        <!-- Feature 5 -->
+        <div class="feature-card">
+          <div class="feature-icon-badge">🎓</div>
+          <h3 class="feature-title">Driver Education Citation Waiver</h3>
+          <p class="feature-desc">
+            First-time minor infractions (e.g. blown bulb, reflector defect) can be 100% fine-waived when commercial drivers complete certified in-app defensive driving safety modules.
+          </p>
+        </div>
+
+        <!-- Feature 6 -->
+        <div class="feature-card">
+          <div class="feature-icon-badge">📡</div>
+          <h3 class="feature-title">Real-Time Civic APB Network</h3>
+          <p class="feature-desc">
+            Immediate broadcast alerts across all patrol checkpoints and garage terminals within seconds of a reported vehicle theft, drastically accelerating vehicle recovery rates.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Platform CTA -->
+    <section style="background: linear-gradient(135deg, #1e293b, #0f172a); border: 1px solid #334155; border-radius: var(--radius-xl); padding: 3rem; text-align: center; margin: 4rem 0;">
+      <h2 style="font-size: 2.25rem; font-weight: 800; margin-bottom: 1rem;">Experience the Street Code Ecosystem</h2>
+      <p style="color: var(--text-muted); max-width: 600px; margin: 0 auto 2rem auto;">
+        Jump into the live Civic Command Center for multi-station dispatch or open the touch-first Mobile App for drivers, mechanics, and vehicle owners.
+      </p>
+      <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+        <a href="/civic/" class="nav-btn nav-btn-primary" style="padding: 0.85rem 1.75rem; font-size: 1rem;">
+          🛡️ Launch Civic Command Center
+        </a>
+        <a href="/mobile/" class="nav-btn" style="padding: 0.85rem 1.75rem; font-size: 1rem;">
+          📱 Open Mobile PWA Client
+        </a>
+        <a href="/marketplace.html" class="nav-btn" style="padding: 0.85rem 1.75rem; font-size: 1rem;">
+          🔧 Browse Certified Garages
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer-inner">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <div class="brand-icon" style="width: 28px; height: 28px; font-size: 1rem;">⚡</div>
+        <strong>Street Code Automotive OS</strong> — Republic of The Gambia Node
+      </div>
+      <div>
+        Designed for High-Trust Civic Mobility & Transparent Marketplace Infrastructure
+      </div>
+      <div style="font-family: var(--font-mono); font-size: 0.75rem;">
+        v1.0.0 • SQLite WAL • Node 24 Native
+      </div>
+    </div>
+  </footer>
+
+  <script src="/js/app.js"></script>
+</body>
+</html>

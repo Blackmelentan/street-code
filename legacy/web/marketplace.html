@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Garages & OEM Parts Marketplace - Street Code</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <header class="navbar">
+    <a href="/" class="brand-group">
+      <div class="brand-icon">⚡</div>
+      <div>
+        <div class="brand-title">Street Code</div>
+        <div class="brand-sub">WORKSHOPS & OEM PARTS</div>
+      </div>
+    </a>
+    <nav class="nav-links">
+      <a href="/" class="nav-link">Home</a>
+      <a href="/passport-lookup.html" class="nav-link">Vehicle Passport</a>
+      <a href="/marketplace.html" class="nav-link active">Garages & Parts</a>
+      <a href="/civic/" class="nav-btn">🛡️ Civic Command</a>
+      <a href="/mobile/" class="nav-btn nav-btn-primary">📱 Mobile App</a>
+    </nav>
+  </header>
+
+  <main class="container">
+    <div style="margin: 2rem 0 3rem 0; text-align: center;">
+      <h1 style="font-size: 2.5rem; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 0.5rem;">
+        Certified Garages & Genuine OEM Parts
+      </h1>
+      <p style="color: var(--text-muted); max-width: 600px; margin: 0 auto;">
+        Real-time bay capacity tracking and transparent African Mobile Money escrow for repairs and spares.
+      </p>
+    </div>
+
+    <!-- Switcher Tabs -->
+    <div style="display: flex; gap: 12px; margin-bottom: 2rem; border-bottom: 1px solid var(--border-subtle); padding-bottom: 1rem;">
+      <button id="tab-btn-garages" class="nav-btn nav-btn-primary" onclick="switchTab('garages')">
+        🔧 Certified Workshops & Live Bays
+      </button>
+      <button id="tab-btn-parts" class="nav-btn" onclick="switchTab('parts')">
+        📦 Verified OEM Parts Catalog
+      </button>
+    </div>
+
+    <!-- Section 1: Workshops Grid -->
+    <div id="section-garages">
+      <div id="workshops-grid" class="features-grid">
+        <div style="color: var(--text-muted); padding: 2rem;">Loading workshops capacity...</div>
+      </div>
+    </div>
+
+    <!-- Section 2: Parts Catalog Grid -->
+    <div id="section-parts" style="display: none;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 12px;">
+        <input 
+          id="parts-search-input" 
+          type="text" 
+          placeholder="Filter parts by name, model, or code (e.g. Brake, RAV4, Battery)..." 
+          class="search-input" 
+          style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); max-width: 400px; padding: 10px 16px;"
+          oninput="filterParts(this.value)"
+        >
+        <div style="font-family: var(--font-mono); font-size: 0.85rem; color: var(--accent-emerald);">
+          ✓ 100% Escrow-Protected via Afrimoney & QMoney
+        </div>
+      </div>
+
+      <div id="parts-grid" class="features-grid">
+        <div style="color: var(--text-muted); padding: 2rem;">Loading parts inventory...</div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Escrow Checkout Modal Simulation -->
+  <div id="escrow-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); z-index: 200; align-items: center; justify-content: center;">
+    <div style="background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-xl); padding: 2rem; max-width: 480px; width: 90%; box-shadow: var(--shadow-card);">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <h3 id="modal-item-name" style="font-size: 1.25rem; font-weight: 800;">Initiate MoMo Escrow</h3>
+        <button onclick="closeModal()" style="background: none; border: none; color: var(--text-muted); font-size: 1.5rem; cursor: pointer;">&times;</button>
+      </div>
+
+      <div id="modal-step-init">
+        <div style="margin-bottom: 1rem;">
+          <label style="display: block; font-size: 0.8rem; font-family: var(--font-mono); color: var(--text-dim); margin-bottom: 4px;">PURCHASE / ESCROW AMOUNT</label>
+          <div id="modal-amount-display" style="font-size: 1.75rem; font-weight: 800; font-family: var(--font-mono); color: #34d399;">D0</div>
+        </div>
+
+        <div style="margin-bottom: 1rem;">
+          <label style="display: block; font-size: 0.8rem; font-family: var(--font-mono); color: var(--text-dim); margin-bottom: 4px;">SELECT MOBILE MONEY PROVIDER</label>
+          <div style="display: flex; gap: 10px;">
+            <label style="flex: 1; display: flex; align-items: center; gap: 8px; background: var(--bg-card); border: 1px solid var(--border-subtle); padding: 10px; border-radius: 8px; cursor: pointer;">
+              <input type="radio" name="momo-provider" value="afrimoney" checked>
+              <strong>Afrimoney</strong> (*777#)
+            </label>
+            <label style="flex: 1; display: flex; align-items: center; gap: 8px; background: var(--bg-card); border: 1px solid var(--border-subtle); padding: 10px; border-radius: 8px; cursor: pointer;">
+              <input type="radio" name="momo-provider" value="qmoney">
+              <strong>QMoney</strong> (*323#)
+            </label>
+          </div>
+        </div>
+
+        <div style="margin-bottom: 1.5rem;">
+          <label style="display: block; font-size: 0.8rem; font-family: var(--font-mono); color: var(--text-dim); margin-bottom: 4px;">CUSTOMER PHONE NUMBER</label>
+          <input id="modal-phone-input" type="text" value="+220 7333444" class="search-input" style="background: var(--bg-input); border: 1px solid var(--border-subtle); border-radius: 8px; width: 100%;">
+        </div>
+
+        <button onclick="triggerMoMoPush()" class="search-btn" style="width: 100%; justify-content: center; height: 46px;">
+          Send USSD Prompt to Handset →
+        </button>
+      </div>
+
+      <!-- Step 2: USSD simulation prompt -->
+      <div id="modal-step-ussd" style="display: none; text-align: center; padding: 1rem 0;">
+        <div style="width: 60px; height: 60px; border-radius: 50%; background: #0284c7; display: flex; align-items: center; justify-content: center; font-size: 1.75rem; margin: 0 auto 1rem auto; box-shadow: 0 0 20px rgba(2, 132, 199, 0.5);">📱</div>
+        <h4 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 0.5rem;">USSD Prompt Sent to Phone</h4>
+        <p id="modal-ussd-text" style="font-family: var(--font-mono); font-size: 0.85rem; color: #cbd5e1; background: #0f172a; border: 1px solid #1e293b; padding: 12px; border-radius: 8px; margin-bottom: 1rem;"></p>
+        
+        <div style="margin-bottom: 1rem;">
+          <label style="font-size: 0.8rem; font-family: var(--font-mono); color: var(--text-dim); display: block; margin-bottom: 4px;">ENTER WALLET PIN (SIMULATION)</label>
+          <input id="modal-pin-input" type="password" value="1234" maxlength="4" style="text-align: center; letter-spacing: 8px; font-size: 1.5rem; width: 140px; padding: 8px; background: var(--bg-input); border: 1px solid var(--border-subtle); border-radius: 8px; color: white;">
+        </div>
+
+        <button onclick="confirmUssdPin()" class="nav-btn nav-btn-primary" style="width: 100%; justify-content: center; height: 44px;">
+          ✓ Confirm PIN & Lock Funds in Escrow
+        </button>
+      </div>
+
+      <!-- Step 3: Success -->
+      <div id="modal-step-success" style="display: none; text-align: center; padding: 1rem 0;">
+        <div style="width: 60px; height: 60px; border-radius: 50%; background: #10b981; display: flex; align-items: center; justify-content: center; font-size: 2rem; margin: 0 auto 1rem auto; color: white;">✓</div>
+        <h4 style="font-size: 1.25rem; font-weight: 800; color: #34d399; margin-bottom: 0.5rem;">Escrow Funded & Locked</h4>
+        <p id="modal-success-text" style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 1.5rem;"></p>
+        <button onclick="closeModal()" class="nav-btn" style="width: 100%; justify-content: center;">Done</button>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    let allParts = [];
+    let currentEscrowItem = null;
+    let activeEscrowRef = null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      fetchWorkshops();
+      fetchParts();
+    });
+
+    function switchTab(tab) {
+      const gSec = document.getElementById('section-garages');
+      const pSec = document.getElementById('section-parts');
+      const gBtn = document.getElementById('tab-btn-garages');
+      const pBtn = document.getElementById('tab-btn-parts');
+
+      if (tab === 'garages') {
+        gSec.style.display = 'block';
+        pSec.style.display = 'none';
+        gBtn.className = 'nav-btn nav-btn-primary';
+        pBtn.className = 'nav-btn';
+      } else {
+        gSec.style.display = 'none';
+        pSec.style.display = 'block';
+        pBtn.className = 'nav-btn nav-btn-primary';
+        gBtn.className = 'nav-btn';
+      }
+    }
+
+    async function fetchWorkshops() {
+      try {
+        const res = await fetch('/api/workshops');
+        const data = await res.json();
+        const grid = document.getElementById('workshops-grid');
+
+        grid.innerHTML = data.workshops.map(w => `
+          <div class="feature-card">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+              <div>
+                <span class="badge badge-emerald">★ ${w.rating.toFixed(1)} CERTIFIED</span>
+                <h3 style="font-size: 1.2rem; font-weight: 800; margin-top: 6px;">${w.name}</h3>
+              </div>
+              <div style="text-align: right;">
+                <div style="font-family: var(--font-mono); font-size: 1.1rem; font-weight: 800; color: ${w.available_bays > 0 ? '#34d399' : '#f43f5e'};">
+                  ${w.available_bays} / ${w.active_bays}
+                </div>
+                <div style="font-size: 0.75rem; color: var(--text-dim); font-family: var(--font-mono);">BAYS AVAILABLE</div>
+              </div>
+            </div>
+
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">
+              📍 ${w.address}
+            </p>
+
+            <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px;">
+              ${w.specialties.map(s => `<span class="quick-chip" style="font-size: 0.75rem;">${s}</span>`).join('')}
+            </div>
+
+            <button onclick="openBookingModal('${w.name}', 1500)" class="nav-btn nav-btn-primary" style="width: 100%; justify-content: center;">
+              Book Diagnostic Bay (D1,500 Deposit) →
+            </button>
+          </div>
+        `).join('');
+      } catch (e) {
+        console.error('Workshops error:', e);
+      }
+    }
+
+    async function fetchParts() {
+      try {
+        const res = await fetch('/api/workshops/parts/all');
+        const data = await res.json();
+        allParts = data.parts;
+        renderPartsList(allParts);
+      } catch (e) {
+        console.error('Parts error:', e);
+      }
+    }
+
+    function renderPartsList(parts) {
+      const grid = document.getElementById('parts-grid');
+      grid.innerHTML = parts.map(p => `
+        <div class="feature-card">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+            <span class="badge ${p.is_oem ? 'badge-emerald' : 'badge-amber'}">${p.is_oem ? '✓ GENUINE OEM' : 'AFTERMARKET'}</span>
+            <span style="font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-dim);">${p.part_number}</span>
+          </div>
+
+          <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 6px;">${p.name}</h3>
+          
+          <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px;">
+            Category: <strong style="color: #cbd5e1;">${p.category}</strong>
+          </div>
+          <div style="font-size: 0.8rem; color: var(--text-dim); margin-bottom: 14px;">
+            Fits: ${p.compatible_models}
+          </div>
+
+          <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-subtle); padding-top: 14px;">
+            <div>
+              <div style="font-size: 1.35rem; font-weight: 800; font-family: var(--font-mono); color: #38bdf8;">
+                D${p.price_gmd.toLocaleString()}
+              </div>
+              <div style="font-size: 0.75rem; color: var(--text-dim);">Stock: ${p.stock_quantity} units</div>
+            </div>
+
+            <button onclick="openBookingModal('${p.name}', ${p.price_gmd})" class="nav-btn" style="background: rgba(2, 132, 199, 0.2); border-color: #0284c7; color: #38bdf8;">
+              Order with Escrow
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function filterParts(term) {
+      if (!term.trim()) {
+        renderPartsList(allParts);
+        return;
+      }
+      const t = term.toLowerCase();
+      const filtered = allParts.filter(p => 
+        p.name.toLowerCase().includes(t) || 
+        p.part_number.toLowerCase().includes(t) || 
+        p.compatible_models.toLowerCase().includes(t)
+      );
+      renderPartsList(filtered);
+    }
+
+    function openBookingModal(name, amount) {
+      currentEscrowItem = { name, amount };
+      document.getElementById('modal-item-name').textContent = name;
+      document.getElementById('modal-amount-display').textContent = `D${amount.toLocaleString()}`;
+      document.getElementById('modal-step-init').style.display = 'block';
+      document.getElementById('modal-step-ussd').style.display = 'none';
+      document.getElementById('modal-step-success').style.display = 'none';
+      document.getElementById('escrow-modal').style.display = 'flex';
+    }
+
+    function closeModal() {
+      document.getElementById('escrow-modal').style.display = 'none';
+    }
+
+    async function triggerMoMoPush() {
+      const provider = document.querySelector('input[name="momo-provider"]:checked').value;
+      const phone = document.getElementById('modal-phone-input').value;
+
+      try {
+        // Log in as demo user or use direct API call
+        const tokenRes = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone: '+2207333444', password: 'streetcode123' })
+        });
+        const tokenData = await tokenRes.json();
+
+        const res = await fetch('/api/momo/escrow/initiate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${tokenData.token}`
+          },
+          body: JSON.stringify({
+            payeeId: 'usr-mech-01',
+            provider,
+            phoneNumber: phone,
+            amountGmd: currentEscrowItem.amount
+          })
+        });
+
+        const tx = await res.json();
+        if (!res.ok) throw new Error(tx.error);
+
+        activeEscrowRef = tx.referenceCode;
+        document.getElementById('modal-ussd-text').textContent = tx.ussdPrompt;
+        document.getElementById('modal-step-init').style.display = 'none';
+        document.getElementById('modal-step-ussd').style.display = 'block';
+      } catch (err) {
+        alert('Escrow initialization failed: ' + err.message);
+      }
+    }
+
+    async function confirmUssdPin() {
+      const pin = document.getElementById('modal-pin-input').value;
+      try {
+        const res = await fetch('/api/momo/escrow/confirm-ussd', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ referenceCode: activeEscrowRef, pin })
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+
+        document.getElementById('modal-success-text').innerHTML = `
+          Transaction Ref: <strong>${data.reference_code}</strong><br>
+          ${data.message}
+        `;
+        document.getElementById('modal-step-ussd').style.display = 'none';
+        document.getElementById('modal-step-success').style.display = 'block';
+      } catch (err) {
+        alert('PIN confirmation error: ' + err.message);
+      }
+    }
+  </script>
+</body>
+</html>

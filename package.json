@@ -1,0 +1,30 @@
+{
+  "name": "street-code",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Street Code: the automotive operating system. API, mobile PWA, police command console and public site.",
+  "engines": {
+    "node": ">=22.13"
+  },
+  "scripts": {
+    "setup": "node scripts/setup.mjs",
+    "dev": "node --watch apps/api/src/server.js",
+    "start": "node apps/api/src/server.js",
+    "seed": "node apps/api/scripts/seed.js",
+    "reset": "node apps/api/scripts/seed.js --reset",
+    "brand": "node scripts/build-brand.mjs",
+    "test": "npm run test:core && npm run test:api",
+    "test:core": "node --test \"packages/core/tests/*.test.js\"",
+    "test:api": "node --test --test-concurrency=1 \"apps/api/tests/*.test.js\""
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.2",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "sharp": "^0.34.5"
+  }
+}

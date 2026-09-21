@@ -1,0 +1,269 @@
+/* ==============================================================================
+   CIVIC COMMAND CENTER - WORKSTATION STYLESHEET
+   High-density, mission-critical NOC interface for Fleet Ops & Law Enforcement
+   ============================================================================== */
+
+:root {
+  --civic-bg: #090d16;
+  --civic-panel: #0f1624;
+  --civic-header: #131c2e;
+  --civic-card: #182338;
+  --civic-border: #23334d;
+  --civic-text: #f8fafc;
+  --civic-muted: #94a3b8;
+  --civic-dim: #475569;
+  
+  --civic-blue: #0284c7;
+  --civic-emerald: #10b981;
+  --civic-amber: #f59e0b;
+  --civic-rose: #f43f5e;
+  --civic-purple: #8b5cf6;
+
+  --font-mono: ui-monospace, "SF Mono", Menlo, Monaco, Consolas, monospace;
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--civic-bg);
+  color: var(--civic-text);
+  font-family: var(--font-sans);
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Command Top Bar */
+.civic-topbar {
+  background: var(--civic-header);
+  border-bottom: 1px solid var(--civic-border);
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1.5rem;
+  flex-shrink: 0;
+  z-index: 50;
+}
+
+.civic-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.civic-badge {
+  background: rgba(2, 132, 199, 0.2);
+  border: 1px solid var(--civic-blue);
+  color: #38bdf8;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.civic-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--civic-emerald);
+  display: inline-block;
+  box-shadow: 0 0 8px var(--civic-emerald);
+}
+
+/* Main Dashboard Workspace */
+.civic-workspace {
+  display: grid;
+  grid-template-columns: 320px 1fr 380px;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* Columns */
+.civic-col {
+  border-right: 1px solid var(--civic-border);
+  display: flex;
+  flex-direction: column;
+  background: var(--civic-panel);
+  overflow: hidden;
+}
+
+.civic-col:last-child {
+  border-right: none;
+}
+
+.civic-col-header {
+  padding: 12px 16px;
+  background: rgba(19, 28, 46, 0.8);
+  border-bottom: 1px solid var(--civic-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.civic-col-title {
+  font-size: 0.85rem;
+  font-weight: 800;
+  font-family: var(--font-mono);
+  color: var(--civic-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.civic-col-body {
+  padding: 16px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* Interactive Map Simulation */
+.map-container {
+  height: 100%;
+  background: #080d17;
+  position: relative;
+  overflow: hidden;
+  background-image: 
+    radial-gradient(#1e293b 1px, transparent 1px), 
+    linear-gradient(to right, #111a2e 1px, transparent 1px),
+    linear-gradient(to bottom, #111a2e 1px, transparent 1px);
+  background-size: 20px 20px, 60px 60px, 60px 60px;
+}
+
+.map-marker {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  cursor: pointer;
+  transition: all 0.5s ease-out;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.map-marker-pin {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 900;
+  color: white;
+  box-shadow: 0 0 14px rgba(0,0,0,0.6);
+}
+
+.map-marker-label {
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid #334155;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-family: var(--font-mono);
+  margin-top: 4px;
+  white-space: nowrap;
+}
+
+/* Control Items */
+.card-item {
+  background: var(--civic-card);
+  border: 1px solid var(--civic-border);
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 12px;
+  transition: border-color 0.15s;
+}
+
+.card-item:hover {
+  border-color: #38bdf8;
+}
+
+.card-item.stolen {
+  border-color: #f43f5e;
+  background: rgba(244, 63, 94, 0.08);
+}
+
+.form-group {
+  margin-bottom: 12px;
+}
+
+.form-label {
+  display: block;
+  font-size: 0.75rem;
+  font-family: var(--font-mono);
+  color: var(--civic-muted);
+  margin-bottom: 4px;
+  text-transform: uppercase;
+}
+
+.form-input, .form-select, .form-textarea {
+  width: 100%;
+  background: #0a0f1d;
+  border: 1px solid var(--civic-border);
+  border-radius: 6px;
+  padding: 8px 10px;
+  color: var(--civic-text);
+  font-size: 0.85rem;
+  font-family: var(--font-mono);
+  outline: none;
+}
+
+.form-input:focus, .form-select:focus, .form-textarea:focus {
+  border-color: var(--civic-blue);
+}
+
+.btn-action {
+  background: var(--civic-blue);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: opacity 0.15s;
+}
+
+.btn-action:hover { opacity: 0.9; }
+
+.btn-danger {
+  background: var(--civic-rose);
+}
+
+.btn-success {
+  background: var(--civic-emerald);
+}
+
+/* Modals */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.75);
+  backdrop-filter: blur(4px);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-box {
+  background: var(--civic-panel);
+  border: 1px solid var(--civic-border);
+  border-radius: 12px;
+  padding: 24px;
+  max-width: 540px;
+  width: 90%;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+}
